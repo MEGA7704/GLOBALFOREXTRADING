@@ -1149,8 +1149,26 @@ async function serveAsset(env, request, pathname = null) {
   target.search = "";
   return env.ASSETS.fetch(new Request(target.toString(), {
     method: "GET",
-    headers: request.headers
+    headers: { "Accept": "*/*" }
   }));
+}
+
+// Les pages d'authentification sont stockées avec une extension non HTML.
+// Cela neutralise les redirections automatiques de Cloudflare Pages entre
+// /login.html et /login. Le Worker renvoie lui-même une réponse HTML 200.
+async function serveInternalHtml(env, request, assetPath) {
+  const asset = await serveAsset(env, request, assetPath);
+  if (!asset.ok) {
+    return new Response("Page interne introuvable.", {
+      status: 500,
+      headers: { "Content-Type": "text/plain; charset=UTF-8" }
+    });
+  }
+  const headers = new Headers(asset.headers);
+  headers.set("Content-Type", "text/html; charset=UTF-8");
+  headers.set("Cache-Control", "no-store");
+  headers.delete("Location");
+  return new Response(asset.body, { status: 200, headers });
 }
 
 export default {
@@ -1173,9 +1191,9 @@ export default {
 
       if (path === "/_worker.js") return addSecurityHeaders(new Response("Not found", { status: 404 }), path);
 
-      // Cloudflare Pages canonicalise automatiquement /page.html vers /page.
-      // Ne jamais demander un fichier .html à env.ASSETS ici : cela provoquerait
-      // une boucle /login -> /login.html -> /login avec le routage Advanced Mode.
+      // Les anciennes URL .html sont normalisées une seule fois.
+      // La page finale /login est servie depuis une ressource .page interne,
+      // donc env.ASSETS ne peut plus déclencher de redirection HTML inverse.
       if (path === "/login.html") {
         const canonical = new URL("/login", url);
         canonical.search = url.search;
@@ -1187,12 +1205,20 @@ export default {
         return Response.redirect(canonical, 308);
       }
 
+      // Interdire l'accès direct aux ressources HTML internes.
+      if (path.startsWith("/internal-pages/")) {
+        return addSecurityHeaders(new Response("Not found", { status: 404 }), path);
+      }
+
       const isPublicAsset = PUBLIC_ASSETS.has(path) || path.startsWith("/assets/");
       if (isPublicAsset) return addSecurityHeaders(await serveAsset(env, request), path);
 
       if (path === "/login") {
         if (auth) return Response.redirect(new URL("/", url), 303);
-        return addSecurityHeaders(await serveAsset(env, request, "/login"), "/login");
+        return addSecurityHeaders(
+          await serveInternalHtml(env, request, "/internal-pages/login.page"),
+          "/login"
+        );
       }
 
       if (!auth) {
@@ -1203,7 +1229,10 @@ export default {
 
       if (path === "/plan-expired") {
         if (auth.user.role === "member" && !auth.plan?.active) {
-          return addSecurityHeaders(await serveAsset(env, request, "/plan-expired"), "/plan-expired");
+          return addSecurityHeaders(
+            await serveInternalHtml(env, request, "/internal-pages/plan-expired.page"),
+            "/plan-expired"
+          );
         }
         return Response.redirect(new URL("/", url), 303);
       }
