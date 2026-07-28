@@ -335,7 +335,7 @@
     wrap.innerHTML = `
       <section class="admin-overview">
         <div><span>CENTRE D’ADMINISTRATION</span><h1>Gestion des membres</h1><p>Gérez les comptes, les accès, les abonnements et les opérations sensibles.</p></div>
-        <div class="admin-overview-actions"><button class="primary" data-create>+ Nouveau membre</button><button data-audit>Journal sensible</button><button data-system>État du système</button><button data-refresh>Actualiser</button></div>
+        <div class="admin-overview-actions"><button class="primary" data-create>+ Nouveau membre</button><button data-reset-requests>Demandes mot de passe</button><button data-audit>Journal sensible</button><button data-system>État du système</button><button data-refresh>Actualiser</button></div>
       </section>
       <section class="admin-summary" aria-label="Résumé des comptes">
         <article><span>Total membres</span><b data-total>—</b></article>
@@ -457,6 +457,7 @@
     }
 
     wrap.querySelector("[data-create]").addEventListener("click", () => showCreateMember(refresh));
+    wrap.querySelector("[data-reset-requests]").addEventListener("click", showPasswordResetRequests);
     wrap.querySelector("[data-audit]").addEventListener("click", showAuditLogs);
     wrap.querySelector("[data-system]").addEventListener("click", showSystemStatus);
     wrap.querySelector("[data-refresh]").addEventListener("click", refresh);
@@ -495,6 +496,90 @@
         button.disabled = false;
       }
     });
+  }
+
+  async function showPasswordResetRequests() {
+    const wrap = document.createElement("div");
+    wrap.innerHTML = `<div class="cloud-empty">Chargement des demandes…</div>`;
+    dialog("Demandes de réinitialisation", wrap);
+
+    async function refreshRequests() {
+      try {
+        const data = await api("/api/admin/password-reset-requests");
+        const requests = data.requests || [];
+        if (!requests.length) {
+          wrap.innerHTML = `<div class="cloud-empty">Aucune demande de réinitialisation en attente.</div>`;
+          return;
+        }
+        wrap.innerHTML = `<div class="password-reset-request-list">${requests.map(item => `
+          <article class="password-reset-request-card" data-id="${escapeHtml(item.id)}">
+            <div class="password-reset-request-main">
+              <span>DEMANDE EN ATTENTE</span>
+              <h4>${escapeHtml(item.user?.name || item.requesterName || "Membre")}</h4>
+              <p>${escapeHtml(item.email)}</p>
+              <small>${escapeHtml(item.user?.companyName || "Entreprise non renseignée")} · ${escapeHtml(formatDate(item.createdAt))}</small>
+            </div>
+            <div class="password-reset-request-message">${escapeHtml(item.message || "Aucune précision complémentaire.")}</div>
+            <div class="password-reset-request-actions">
+              <button class="primary" data-request-reset ${item.userId ? "" : "disabled"}>Réinitialiser le mot de passe</button>
+              <button data-request-resolve>Marquer comme traitée</button>
+              <button class="danger" data-request-dismiss>Ignorer</button>
+            </div>
+          </article>`).join("")}</div>`;
+
+        wrap.querySelectorAll(".password-reset-request-card").forEach(card => {
+          const item = requests.find(request => request.id === card.dataset.id);
+          card.querySelector("[data-request-reset]")?.addEventListener("click", async () => {
+            if (!item?.userId) return;
+            const suggested = randomPassword();
+            const newPassword = prompt(`Nouveau mot de passe temporaire pour ${item.user?.name || item.email} :`, suggested);
+            if (newPassword === null) return;
+            if (!confirm("Réinitialiser le mot de passe et invalider toutes les sessions de ce membre ?")) return;
+            try {
+              await api(`/api/admin/accounts/${encodeURIComponent(item.userId)}/reset-password`, {
+                method: "POST",
+                body: JSON.stringify({ newPassword })
+              });
+              await api(`/api/admin/password-reset-requests/${encodeURIComponent(item.id)}`, {
+                method: "POST",
+                body: JSON.stringify({ status: "resolved" })
+              });
+              alert(`Mot de passe réinitialisé. Communiquez ce mot de passe temporaire au membre par un canal sûr :
+
+${newPassword}`);
+              toast("Demande traitée et mot de passe réinitialisé.");
+              await refreshRequests();
+            } catch (error) { toast(error.message, "error"); }
+          });
+          card.querySelector("[data-request-resolve]")?.addEventListener("click", async () => {
+            if (!confirm("Marquer cette demande comme traitée ?")) return;
+            try {
+              await api(`/api/admin/password-reset-requests/${encodeURIComponent(item.id)}`, {
+                method: "POST",
+                body: JSON.stringify({ status: "resolved" })
+              });
+              toast("Demande marquée comme traitée.");
+              await refreshRequests();
+            } catch (error) { toast(error.message, "error"); }
+          });
+          card.querySelector("[data-request-dismiss]")?.addEventListener("click", async () => {
+            if (!confirm("Ignorer cette demande ?")) return;
+            try {
+              await api(`/api/admin/password-reset-requests/${encodeURIComponent(item.id)}`, {
+                method: "POST",
+                body: JSON.stringify({ status: "dismissed" })
+              });
+              toast("Demande ignorée.");
+              await refreshRequests();
+            } catch (error) { toast(error.message, "error"); }
+          });
+        });
+      } catch (error) {
+        wrap.innerHTML = `<div class="cloud-empty">${escapeHtml(error.message)}</div>`;
+      }
+    }
+
+    await refreshRequests();
   }
 
   async function showAuditLogs() {

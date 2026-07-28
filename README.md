@@ -177,6 +177,7 @@ migrations/
   0001_initial.sql
   0002_security_multitenancy.sql
   0003_runtime_schema_meta.sql
+  0004_password_reset_requests.sql
 scripts/
 wrangler.toml
 package.json
@@ -201,3 +202,15 @@ La correction applique désormais les règles suivantes :
 - un contrôle automatique bloque toute réintroduction de cette boucle pendant `npm run check`.
 
 Après déploiement, ouvrez directement `https://votre-projet.pages.dev/login`.
+
+## Correction ciblée de la connexion — version 2.6.0
+
+La page de connexion est désormais épurée et centrée. Les cartes techniques et le message d’avertissement ont été retirés. Le lien « Mot de passe oublié ? » ouvre une fenêtre dédiée et enregistre une demande interne destinée au Super Admin.
+
+La migration supplémentaire est :
+
+```text
+migrations/0004_password_reset_requests.sql
+```
+
+Le Worker initialise aussi automatiquement cette table lors du premier appel après déploiement.

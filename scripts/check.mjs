@@ -10,6 +10,7 @@ const required = [
   "public/assets/cloud-shell.js",
   "migrations/0002_security_multitenancy.sql",
   "migrations/0003_runtime_schema_meta.sql",
+  "migrations/0004_password_reset_requests.sql",
   "wrangler.toml"
 ];
 for (const file of required) await access(file);
@@ -29,6 +30,7 @@ const worker = await readFile("public/_worker.js", "utf8");
 for (const expected of [
   'path === "/api/login" && method === "POST"',
   'path === "/api/register" && method === "POST"',
+  'path === "/api/password-reset-request" && method === "POST"',
   'MEMBER_SELF_REGISTERED',
   'path === "/api/load" && method === "GET"',
   'path === "/api/save" && method === "POST"',
@@ -36,6 +38,7 @@ for (const expected of [
   "assertCsrf(request)",
   "invalidateAllUserSessions",
   "password_credentials",
+  "password_reset_requests",
   "ensureDatabaseSchema",
   "CREATE TABLE IF NOT EXISTS users",
   "APP_SCHEMA_VERSION"
@@ -72,7 +75,7 @@ async function collectFiles(directory) {
 }
 
 const loginPage = await readFile("public/internal-pages/login.page", "utf8");
-for (const expected of ["showRegisterButton", "registerDialog", "registerForm", "Créer mon compte", "plan Free"]) {
+for (const expected of ["showRegisterButton", "registerDialog", "registerForm", "Créer mon compte", "plan Free", "showForgotPasswordButton", "forgotPasswordDialog", "forgotPasswordForm"]) {
   if (!loginPage.includes(expected)) throw new Error(`Interface d’inscription manquante : ${expected}`);
 }
 const appPage = await readFile("public/index.html", "utf8");
@@ -102,6 +105,7 @@ for (const expected of ["activateRoleInterface", 'showAdmin({ inline: true })', 
 }
 const loginScript = await readFile("public/assets/login.js", "utf8");
 if (!loginScript.includes('/api/register')) throw new Error("Appel navigateur /api/register manquant.");
+if (!loginScript.includes('/api/password-reset-request')) throw new Error("Appel navigateur de demande de réinitialisation manquant.");
 if (!loginScript.includes('showModal')) throw new Error("La fenêtre modale d’inscription n’est pas activée au clic.");
 if (!loginScript.includes('clearRegistrationFields')) throw new Error("Le formulaire d’inscription doit être vidé à son ouverture pour éviter l’autoremplissage administrateur.");
 if (!loginScript.includes('SUPER_ADMIN_EMAIL_RESERVED')) throw new Error("La gestion explicite de l’adresse Super Admin réservée est manquante côté interface.");
@@ -125,4 +129,4 @@ for (const file of browserFiles) {
   }
 }
 
-console.log("Vérification réussie : connexion professionnelle, inscription membre sans autoremplissage administrateur, PBKDF2 Cloudflare et sécurité conformes.");
+console.log("Vérification réussie : connexion épurée, inscription membre, demande de réinitialisation Super Admin, PBKDF2 Cloudflare et sécurité conformes.");

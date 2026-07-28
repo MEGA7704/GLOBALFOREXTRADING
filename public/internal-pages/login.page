@@ -5,41 +5,30 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <meta name="description" content="Connexion sécurisée à GOBAL TRADING — Forex Capture Analyzer Edition"/>
   <title>Connexion — GOBAL TRADING</title>
-  <link rel="stylesheet" href="/assets/login.css?v=2.4.0"/>
+  <link rel="stylesheet" href="/assets/login.css?v=2.6.0"/>
 </head>
 <body>
   <main class="auth-layout">
     <section class="auth-visual" aria-label="Présentation de GOBAL TRADING">
       <div class="grid-glow" aria-hidden="true"></div>
       <div class="visual-content">
-        <div class="visual-badge">ÉDITION SÉCURISÉE CLOUD</div>
-        <h1>GOBAL<br/><span>TRADING</span></h1>
+        <h1>GOBAL TRADING</h1>
         <p class="visual-subtitle">Forex Capture Analyzer Edition</p>
-        <p class="visual-description">Une interface d’analyse professionnelle, sécurisée et adaptée à tous les écrans.</p>
-        <div class="feature-grid">
-          <article><b>KV</b><span>Sessions sécurisées et limitation des tentatives</span></article>
-          <article><b>D1</b><span>Comptes, données et journal d’audit</span></article>
-          <article><b>CSRF</b><span>Protection obligatoire des écritures</span></article>
-          <article><b>PRO</b><span>Plan Free 21 jours et Business 365 jours</span></article>
-        </div>
-        <div class="risk-note">Outil éducatif d’aide à l’analyse. Les marchés financiers comportent un risque de perte.</div>
+        <p class="visual-description">une plateforme sécurisée d’analyse de captures Forex, conçue pour détecter les tendances, identifier les zones clés et faciliter la prise de décision grâce à des indicateurs visuels professionnels.</p>
       </div>
     </section>
 
     <section class="auth-panel">
       <div class="auth-card">
         <div class="auth-card__top">
-          <div class="mini-logo" aria-hidden="true">GT</div>
-          <div>
-            <h2>GOBAL TRADING</h2>
-            <p>Forex Capture Analyzer Edition</p>
-          </div>
+          <h2>GOBAL TRADING</h2>
+          <p>Forex Capture Analyzer Edition</p>
         </div>
 
         <div class="auth-section-heading">
           <span>ESPACE SÉCURISÉ</span>
           <h3>Connexion</h3>
-          <p>Accédez à votre espace personnel cloud.</p>
+          <p>Accédez à votre espace personnel.</p>
         </div>
 
         <div id="authAlert" class="alert" role="alert" hidden></div>
@@ -60,13 +49,8 @@
           </div>
         </form>
 
-        <div class="member-note">
-          <span class="member-note__icon">21</span>
-          <div><b>Nouveau membre ?</b><p>L’inscription active automatiquement un accès Free complet pendant 21 jours.</p></div>
-        </div>
-
-        <div class="setup-note" id="passwordHelpBox">
-          <b>Mot de passe perdu :</b> contactez le Super Admin, qui peut réinitialiser votre accès sans consulter votre ancien mot de passe.
+        <div class="forgot-access">
+          <button class="forgot-link" id="showForgotPasswordButton" type="button">Mot de passe oublié&nbsp;?</button>
         </div>
 
         <div class="auth-meta"><span id="systemState">Vérification du système…</span><span>Cookie HttpOnly sécurisé</span></div>
@@ -124,6 +108,42 @@
     </div>
   </dialog>
 
-  <script src="/assets/login.js?v=2.4.0" defer></script>
+  <dialog id="forgotPasswordDialog" class="register-dialog forgot-dialog" aria-labelledby="forgotPasswordDialogTitle">
+    <div class="dialog-shell">
+      <header class="dialog-head dialog-head--centered">
+        <div>
+          <span class="dialog-kicker">ASSISTANCE COMPTE</span>
+          <h2 id="forgotPasswordDialogTitle">Demande de réinitialisation</h2>
+          <p>Transmettez une demande sécurisée au Super Admin.</p>
+        </div>
+        <button class="dialog-close" id="closeForgotPasswordDialog" type="button" aria-label="Fermer">×</button>
+      </header>
+
+      <div id="forgotPasswordAlert" class="alert dialog-alert" role="alert" hidden></div>
+
+      <form id="forgotPasswordForm" autocomplete="off">
+        <div class="forgot-form-grid">
+          <label>Nom et prénoms
+            <input id="forgotPasswordName" name="name" type="text" autocomplete="name" maxlength="100" placeholder="Votre nom complet"/>
+          </label>
+          <label>Adresse e-mail du compte
+            <input id="forgotPasswordEmail" name="email" type="email" autocomplete="email" required maxlength="180" placeholder="votre@email.com"/>
+          </label>
+          <label>Précision complémentaire <small>(facultatif)</small>
+            <textarea id="forgotPasswordMessage" name="message" maxlength="500" rows="4" placeholder="Ajoutez une précision utile pour le Super Admin."></textarea>
+          </label>
+        </div>
+
+        <div class="request-info">Pour protéger les comptes, aucune information d’existence ou de mot de passe n’est affichée sur cette page.</div>
+
+        <footer class="dialog-actions">
+          <button class="secondary-btn" id="cancelForgotPasswordButton" type="button"><span>Annuler</span><i>×</i></button>
+          <button class="primary-btn" id="forgotPasswordSubmitButton" type="submit"><span>Envoyer la demande</span><i>→</i></button>
+        </footer>
+      </form>
+    </div>
+  </dialog>
+
+  <script src="/assets/login.js?v=2.6.0" defer></script>
 </body>
 </html>

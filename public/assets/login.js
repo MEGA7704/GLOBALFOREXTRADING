@@ -5,11 +5,14 @@
   const loginForm = $("loginForm");
   const registerForm = $("registerForm");
   const registerDialog = $("registerDialog");
+  const forgotPasswordDialog = $("forgotPasswordDialog");
+  const forgotPasswordForm = $("forgotPasswordForm");
+  const forgotPasswordAlert = $("forgotPasswordAlert");
   let csrfToken = "";
 
   function showAlert(target, message, type = "error") {
     target.textContent = message;
-    target.className = `alert${type === "success" ? " success" : ""}${target === registerAlert ? " dialog-alert" : ""}`;
+    target.className = `alert${type === "success" ? " success" : ""}${target !== loginAlert ? " dialog-alert" : ""}`;
     target.hidden = false;
   }
 
@@ -81,6 +84,29 @@
     clearAlert(registerAlert);
     if (typeof registerDialog.close === "function") registerDialog.close();
     else registerDialog.removeAttribute("open");
+  }
+
+  function clearForgotPasswordFields() {
+    forgotPasswordForm.reset();
+    const loginEmail = $("loginEmail")?.value.trim() || "";
+    $("forgotPasswordEmail").value = loginEmail;
+  }
+
+  function openForgotPasswordDialog() {
+    clearAlert(forgotPasswordAlert);
+    clearForgotPasswordFields();
+    if (typeof forgotPasswordDialog.showModal === "function") forgotPasswordDialog.showModal();
+    else forgotPasswordDialog.setAttribute("open", "");
+    requestAnimationFrame(() => {
+      const email = $("forgotPasswordEmail");
+      (email?.value ? $("forgotPasswordName") : email)?.focus();
+    });
+  }
+
+  function closeForgotPasswordDialog() {
+    clearAlert(forgotPasswordAlert);
+    if (typeof forgotPasswordDialog.close === "function") forgotPasswordDialog.close();
+    else forgotPasswordDialog.removeAttribute("open");
   }
 
   async function loadStatus() {
@@ -162,15 +188,58 @@
     }
   });
 
+
+  forgotPasswordForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    clearAlert(forgotPasswordAlert);
+    const button = $("forgotPasswordSubmitButton");
+    button.disabled = true;
+    try {
+      if (!csrfToken) await refreshCsrf();
+      await api("/api/password-reset-request", {
+        method: "POST",
+        body: JSON.stringify({
+          name: $("forgotPasswordName").value.trim(),
+          email: $("forgotPasswordEmail").value.trim(),
+          message: $("forgotPasswordMessage").value.trim()
+        })
+      });
+      showAlert(
+        forgotPasswordAlert,
+        "Votre demande a été transmise. Le Super Admin pourra vous assister après vérification de votre compte.",
+        "success"
+      );
+      forgotPasswordForm.reset();
+      window.setTimeout(closeForgotPasswordDialog, 1600);
+    } catch (error) {
+      if (error.status === 403) {
+        try { await refreshCsrf(); } catch { /* Nouvelle tentative manuelle. */ }
+      }
+      showAlert(forgotPasswordAlert, error.message);
+    } finally {
+      button.disabled = false;
+    }
+  });
+
   $("showRegisterButton").addEventListener("click", openRegisterDialog);
   $("closeRegisterDialog").addEventListener("click", closeRegisterDialog);
   $("cancelRegisterButton").addEventListener("click", closeRegisterDialog);
+  $("showForgotPasswordButton").addEventListener("click", openForgotPasswordDialog);
+  $("closeForgotPasswordDialog").addEventListener("click", closeForgotPasswordDialog);
+  $("cancelForgotPasswordButton").addEventListener("click", closeForgotPasswordDialog);
   registerDialog.addEventListener("click", (event) => {
     if (event.target === registerDialog) closeRegisterDialog();
   });
   registerDialog.addEventListener("cancel", (event) => {
     event.preventDefault();
     closeRegisterDialog();
+  });
+  forgotPasswordDialog.addEventListener("click", (event) => {
+    if (event.target === forgotPasswordDialog) closeForgotPasswordDialog();
+  });
+  forgotPasswordDialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeForgotPasswordDialog();
   });
 
   document.querySelectorAll("[data-toggle-password]").forEach((button) => {

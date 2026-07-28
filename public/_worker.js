@@ -6,6 +6,7 @@ const CSRF_TTL_SECONDS = 60 * 60;
 const LOGIN_WINDOW_SECONDS = 15 * 60;
 const LOGIN_MAX_ATTEMPTS = 5;
 const REGISTER_MAX_ATTEMPTS = 3;
+const PASSWORD_RESET_MAX_ATTEMPTS = 3;
 const PBKDF2_ITERATIONS = 100000;
 const PBKDF2_MAX_SUPPORTED_ITERATIONS = 100000;
 const FREE_PLAN_DAYS = 21;
@@ -13,7 +14,7 @@ const BUSINESS_PLAN_DAYS = 365;
 const PAYMENT_URL = "https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=365000";
 const APP_STATE_MAX_BYTES = 350000;
 
-const APP_SCHEMA_VERSION = 3;
+const APP_SCHEMA_VERSION = 4;
 
 const FINAL_TABLE_STATEMENTS = [
   `CREATE TABLE IF NOT EXISTS app_schema_meta (
@@ -51,6 +52,19 @@ const FINAL_TABLE_STATEMENTS = [
     algorithm TEXT NOT NULL DEFAULT 'pbkdf2_sha256',
     updated_at TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  )`,
+  `CREATE TABLE IF NOT EXISTS password_reset_requests (
+    id TEXT PRIMARY KEY,
+    user_id TEXT,
+    email TEXT NOT NULL COLLATE NOCASE,
+    requester_name TEXT,
+    message TEXT,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','resolved','dismissed')),
+    created_at TEXT NOT NULL,
+    resolved_at TEXT,
+    resolved_by TEXT,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (resolved_by) REFERENCES users(id) ON DELETE SET NULL
   )`,
   `CREATE TABLE IF NOT EXISTS analyses (
     id TEXT PRIMARY KEY,
@@ -101,6 +115,8 @@ const FINAL_INDEX_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS idx_companies_status_plan ON companies(status, plan_expires_at)`,
   `CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`,
   `CREATE INDEX IF NOT EXISTS idx_users_company ON users(company_id, is_active)`,
+  `CREATE INDEX IF NOT EXISTS idx_password_reset_status_date ON password_reset_requests(status, created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_password_reset_user ON password_reset_requests(user_id, status)`,
   `CREATE INDEX IF NOT EXISTS idx_analyses_company_date ON analyses(company_id, created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_analyses_user_date ON analyses(user_id, created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_audit_date ON audit_logs(created_at DESC)`,
@@ -502,7 +518,7 @@ async function migrateLegacySchema(db) {
 
 async function verifyFinalSchema(db) {
   const requiredTables = [
-    "companies", "users", "password_credentials", "analyses",
+    "companies", "users", "password_credentials", "password_reset_requests", "analyses",
     "audit_logs", "company_data", "app_schema_meta"
   ];
   const placeholders = requiredTables.map(() => "?").join(",");
@@ -523,6 +539,10 @@ async function verifyFinalSchema(db) {
   const credentialColumns = await tableColumns(db, "password_credentials");
   for (const column of ["user_id", "password_hash", "algorithm", "updated_at"]) {
     if (!credentialColumns.has(column)) throw new Error(`Schéma D1 incompatible : colonne password_credentials.${column} absente.`);
+  }
+  const resetRequestColumns = await tableColumns(db, "password_reset_requests");
+  for (const column of ["id", "user_id", "email", "status", "created_at", "resolved_by"]) {
+    if (!resetRequestColumns.has(column)) throw new Error(`Schéma D1 incompatible : colonne password_reset_requests.${column} absente.`);
   }
 }
 
@@ -778,6 +798,32 @@ async function consumeRegistrationSlot(env, request, email) {
   ]);
 }
 
+async function passwordResetRateKeys(env, request, email) {
+  const ip = requestMeta(request).ip;
+  return {
+    ipKey: `password-reset-rate:ip:${await sha256(ip)}`,
+    accountKey: `password-reset-rate:account:${await sha256(normalizeEmail(email))}`
+  };
+}
+
+async function consumePasswordResetSlot(env, request, email) {
+  const keys = await passwordResetRateKeys(env, request, email);
+  const [ipCount, accountCount] = await Promise.all([
+    readCounter(env, keys.ipKey),
+    readCounter(env, keys.accountKey)
+  ]);
+  if (ipCount >= PASSWORD_RESET_MAX_ATTEMPTS || accountCount >= PASSWORD_RESET_MAX_ATTEMPTS) {
+    const error = new Error("Trop de demandes. Réessayez dans 15 minutes.");
+    error.status = 429;
+    error.headers = { "Retry-After": String(LOGIN_WINDOW_SECONDS) };
+    throw error;
+  }
+  await Promise.all([
+    env.FOREX_KV.put(keys.ipKey, JSON.stringify({ count: ipCount + 1 }), { expirationTtl: LOGIN_WINDOW_SECONDS }),
+    env.FOREX_KV.put(keys.accountKey, JSON.stringify({ count: accountCount + 1 }), { expirationTtl: LOGIN_WINDOW_SECONDS })
+  ]);
+}
+
 async function ensureInitialSuperAdmin(env, request, email, password) {
   const configuredEmail = normalizeEmail(env.SUPER_ADMIN_EMAIL || "mega@services.local");
   if (email !== configuredEmail) return null;
@@ -893,7 +939,7 @@ async function handleStatus(env, auth) {
     ok: d1.includes("connecté") && kv.includes("connecté"),
     authenticated: Boolean(auth),
     services: { d1, kv },
-    version: "2.3.0"
+    version: "2.6.0"
   });
 }
 
@@ -994,6 +1040,65 @@ async function handleRegister(env, request) {
       status: "active"
     })
   }, 201, { "Set-Cookie": sessionCookie(token) });
+}
+
+async function handlePasswordResetRequest(env, request) {
+  assertCsrf(request);
+  const body = await readJson(request, 12000);
+  const email = validateEmail(body.email);
+  const requesterName = safeText(body.name, 100);
+  const message = safeText(body.message, 500);
+  await consumePasswordResetSlot(env, request, email);
+
+  const target = await env.FOREX_D1.prepare(`
+    SELECT id, company_id, name, email
+    FROM users
+    WHERE email = ? AND role = 'member' AND deleted_at IS NULL
+    LIMIT 1
+  `).bind(email).first();
+
+  if (target) {
+    const now = new Date().toISOString();
+    const existing = await env.FOREX_D1.prepare(`
+      SELECT id FROM password_reset_requests
+      WHERE user_id = ? AND status = 'pending'
+      ORDER BY created_at DESC
+      LIMIT 1
+    `).bind(target.id).first();
+
+    if (existing) {
+      await env.FOREX_D1.prepare(`
+        UPDATE password_reset_requests
+        SET email = ?, requester_name = ?, message = ?, created_at = ?, resolved_at = NULL, resolved_by = NULL
+        WHERE id = ?
+      `).bind(email, requesterName || target.name, message, now, existing.id).run();
+    } else {
+      await env.FOREX_D1.prepare(`
+        INSERT INTO password_reset_requests (
+          id, user_id, email, requester_name, message, status, created_at
+        ) VALUES (?, ?, ?, ?, ?, 'pending', ?)
+      `).bind(
+        crypto.randomUUID(),
+        target.id,
+        email,
+        requesterName || target.name,
+        message,
+        now
+      ).run();
+    }
+
+    await auditBestEffort(env, request, {
+      targetUserId: target.id,
+      action: "PASSWORD_RESET_REQUESTED",
+      details: { email }
+    });
+  }
+
+  // Réponse volontairement identique, que le compte existe ou non.
+  return json({
+    ok: true,
+    message: "Si cette adresse correspond à un compte membre, la demande a été transmise au Super Admin."
+  });
 }
 
 async function handleLogin(env, request) {
@@ -1553,6 +1658,73 @@ async function deleteAdminAccount(env, request, auth, userId) {
   return json({ ok: true });
 }
 
+async function listPasswordResetRequests(env, auth) {
+  requireRole(auth, "super_admin");
+  const result = await env.FOREX_D1.prepare(`
+    SELECT
+      r.id, r.user_id, r.email, r.requester_name, r.message,
+      r.status, r.created_at, r.resolved_at,
+      u.name AS user_name, u.email AS user_email,
+      c.name AS company_name
+    FROM password_reset_requests r
+    LEFT JOIN users u ON u.id = r.user_id
+    LEFT JOIN companies c ON c.id = u.company_id
+    WHERE r.status = 'pending'
+    ORDER BY r.created_at DESC
+    LIMIT 200
+  `).all();
+  return json({
+    requests: (result.results || []).map(row => ({
+      id: row.id,
+      userId: row.user_id,
+      email: row.email,
+      requesterName: row.requester_name,
+      message: row.message,
+      status: row.status,
+      createdAt: row.created_at,
+      resolvedAt: row.resolved_at,
+      user: row.user_id ? {
+        id: row.user_id,
+        name: row.user_name,
+        email: row.user_email,
+        companyName: row.company_name
+      } : null
+    }))
+  });
+}
+
+async function updatePasswordResetRequest(env, request, auth, requestId) {
+  requireRole(auth, "super_admin");
+  assertCsrf(request);
+  const body = await readJson(request, 5000);
+  const status = body.status === "resolved" ? "resolved" : body.status === "dismissed" ? "dismissed" : null;
+  if (!status) throw new Error("Statut de demande invalide.");
+  const target = await env.FOREX_D1.prepare(`
+    SELECT id, user_id, email, status
+    FROM password_reset_requests
+    WHERE id = ?
+    LIMIT 1
+  `).bind(requestId).first();
+  if (!target) {
+    const error = new Error("Demande de réinitialisation introuvable.");
+    error.status = 404;
+    throw error;
+  }
+  const now = new Date().toISOString();
+  await env.FOREX_D1.prepare(`
+    UPDATE password_reset_requests
+    SET status = ?, resolved_at = ?, resolved_by = ?
+    WHERE id = ?
+  `).bind(status, now, auth.user.id, requestId).run();
+  await audit(env, request, {
+    actorUserId: auth.user.id,
+    targetUserId: target.user_id || null,
+    action: status === "resolved" ? "PASSWORD_RESET_REQUEST_RESOLVED" : "PASSWORD_RESET_REQUEST_DISMISSED",
+    details: { requestId, email: target.email }
+  });
+  return json({ ok: true, status });
+}
+
 async function listAuditLogs(env, auth) {
   requireRole(auth, "super_admin");
   const result = await env.FOREX_D1.prepare(`
@@ -1587,6 +1759,7 @@ async function handleApi(env, request, auth) {
   if (path === "/api/csrf" && method === "GET") return handleCsrf();
   if (path === "/api/status" && method === "GET") return handleStatus(env, auth);
   if (path === "/api/register" && method === "POST") return handleRegister(env, request);
+  if (path === "/api/password-reset-request" && method === "POST") return handlePasswordResetRequest(env, request);
   if (path === "/api/login" && method === "POST") return handleLogin(env, request);
   if (path === "/api/logout" && method === "POST") return handleLogout(env, request, auth);
   if (path === "/api/me" && method === "GET") return handleMe(auth);
@@ -1597,6 +1770,7 @@ async function handleApi(env, request, auth) {
   if (path === "/api/admin/accounts" && method === "GET") return listAdminAccounts(env, auth);
   if (path === "/api/admin/accounts" && method === "POST") return createAdminAccount(env, request, auth);
   if (path === "/api/admin/audit" && method === "GET") return listAuditLogs(env, auth);
+  if (path === "/api/admin/password-reset-requests" && method === "GET") return listPasswordResetRequests(env, auth);
 
   const accountMatch = path.match(/^\/api\/admin\/accounts\/([^/]+)$/);
   if (accountMatch && method === "PATCH") return updateAdminAccount(env, request, auth, decodeURIComponent(accountMatch[1]));
@@ -1610,6 +1784,11 @@ async function handleApi(env, request, auth) {
 
   const resetMatch = path.match(/^\/api\/admin\/accounts\/([^/]+)\/reset-password$/);
   if (resetMatch && method === "POST") return resetAdminAccountPassword(env, request, auth, decodeURIComponent(resetMatch[1]));
+
+  const resetRequestMatch = path.match(/^\/api\/admin\/password-reset-requests\/([^/]+)$/);
+  if (resetRequestMatch && method === "POST") {
+    return updatePasswordResetRequest(env, request, auth, decodeURIComponent(resetRequestMatch[1]));
+  }
 
   return json({ error: "Route API introuvable." }, 404);
 }

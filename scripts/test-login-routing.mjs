@@ -20,8 +20,11 @@ const env = {
           if (sql.includes("PRAGMA table_info(password_credentials)")) {
             return { results: ["user_id", "password_hash", "algorithm", "updated_at"].map(name => ({ name })) };
           }
+          if (sql.includes("PRAGMA table_info(password_reset_requests)")) {
+            return { results: ["id", "user_id", "email", "requester_name", "message", "status", "created_at", "resolved_at", "resolved_by"].map(name => ({ name })) };
+          }
           if (sql.includes("sqlite_master") && sql.includes("name IN")) {
-            return { results: ["companies", "users", "password_credentials", "analyses", "audit_logs", "company_data", "app_schema_meta"].map(name => ({ name })) };
+            return { results: ["companies", "users", "password_credentials", "password_reset_requests", "analyses", "audit_logs", "company_data", "app_schema_meta"].map(name => ({ name })) };
           }
           return { results: [] };
         },

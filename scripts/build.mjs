@@ -15,17 +15,18 @@ const required = [
   "migrations/0001_initial.sql",
   "migrations/0002_security_multitenancy.sql",
   "migrations/0003_runtime_schema_meta.sql",
+  "migrations/0004_password_reset_requests.sql",
   "wrangler.toml"
 ];
 
 for (const file of required) await access(file);
 const worker = await readFile("public/_worker.js", "utf8");
-for (const route of ["/api/login", "/api/register", "/api/load", "/api/save", "/api/admin/accounts"]) {
+for (const route of ["/api/login", "/api/register", "/api/password-reset-request", "/api/load", "/api/save", "/api/admin/accounts"]) {
   if (!worker.includes(route)) throw new Error(`Route serveur manquante : ${route}`);
 }
 await writeFile("public/build-info.json", JSON.stringify({
   name: "GOBAL TRADING",
-  version: "2.5.0",
+  version: "2.6.0",
   architecture: "Cloudflare Pages Advanced Mode",
   buildAt: new Date().toISOString()
 }, null, 2));
