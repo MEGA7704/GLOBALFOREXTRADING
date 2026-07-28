@@ -78,6 +78,11 @@ for (const expected of ["showRegisterButton", "registerDialog", "registerForm", 
 const loginScript = await readFile("public/assets/login.js", "utf8");
 if (!loginScript.includes('/api/register')) throw new Error("Appel navigateur /api/register manquant.");
 if (!loginScript.includes('showModal')) throw new Error("La fenêtre modale d’inscription n’est pas activée au clic.");
+if (!loginScript.includes('clearRegistrationFields')) throw new Error("Le formulaire d’inscription doit être vidé à son ouverture pour éviter l’autoremplissage administrateur.");
+if (!loginScript.includes('SUPER_ADMIN_EMAIL_RESERVED')) throw new Error("La gestion explicite de l’adresse Super Admin réservée est manquante côté interface.");
+if (!worker.includes('constantTimeEqual(email, superAdminEmail)')) throw new Error("La réservation doit viser uniquement l’adresse exacte du Super Admin.");
+if (!worker.includes('error.code = "SUPER_ADMIN_EMAIL_RESERVED"')) throw new Error("Code d’erreur d’adresse Super Admin manquant.");
+if (!loginPage.includes('name="memberRegistrationEmail"') || !loginPage.includes('autocomplete="off"')) throw new Error("Le champ e-mail membre doit empêcher l’autoremplissage administrateur.");
 if (/const PBKDF2_ITERATIONS = (?!100000)/.test(worker)) throw new Error("PBKDF2 doit utiliser exactement 100000 itérations sur Cloudflare Pages.");
 if (worker.includes('PBKDF2_ITERATIONS = 600000')) throw new Error("Ancienne valeur PBKDF2 incompatible détectée.");
 
@@ -95,4 +100,4 @@ for (const file of browserFiles) {
   }
 }
 
-console.log("Vérification réussie : connexion professionnelle, inscription modale, PBKDF2 Cloudflare et sécurité conformes.");
+console.log("Vérification réussie : connexion professionnelle, inscription membre sans autoremplissage administrateur, PBKDF2 Cloudflare et sécurité conformes.");

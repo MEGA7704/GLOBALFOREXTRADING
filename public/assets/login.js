@@ -52,11 +52,29 @@
     if (!csrfToken) throw new Error("Impossible d’obtenir le jeton de sécurité.");
   }
 
+  function clearRegistrationFields() {
+    registerForm.reset();
+    for (const id of ["registerName", "registerCompany", "registerEmail", "registerPassword", "registerPasswordConfirm"]) {
+      const field = $(id);
+      if (field) field.value = "";
+    }
+  }
+
   function openRegisterDialog() {
     clearAlert(registerAlert);
+    // Empêche le navigateur de recopier l’adresse de connexion (notamment celle du Super Admin)
+    // dans le formulaire d’inscription membre.
+    clearRegistrationFields();
     if (typeof registerDialog.showModal === "function") registerDialog.showModal();
     else registerDialog.setAttribute("open", "");
-    window.setTimeout(() => $("registerName")?.focus(), 80);
+    requestAnimationFrame(() => {
+      clearRegistrationFields();
+      $("registerName")?.focus();
+    });
+    window.setTimeout(() => {
+      const email = $("registerEmail");
+      if (email && email.value === $("loginEmail")?.value) email.value = "";
+    }, 180);
   }
 
   function closeRegisterDialog() {
@@ -135,6 +153,11 @@
         try { await refreshCsrf(); } catch { /* Nouvelle tentative manuelle. */ }
       }
       showAlert(registerAlert, error.message);
+      if (error.code === "SUPER_ADMIN_EMAIL_RESERVED") {
+        const emailField = $("registerEmail");
+        emailField?.focus();
+        emailField?.select();
+      }
       button.disabled = false;
     }
   });

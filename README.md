@@ -1,10 +1,16 @@
+# GLOBAL FOREX TRADING — Version 2.3.0
+
+## Correction V8
+
+L’inscription membre vide désormais ses champs à chaque ouverture et empêche le navigateur de recopier l’adresse du Super Admin. Seule l’adresse exacte configurée dans `SUPER_ADMIN_EMAIL` est réservée ; toutes les autres adresses valides peuvent créer un compte membre.
+
 # GLOBAL FOREX TRADING — Cloudflare Pages sécurisé
 
 ## Correction V7 — connexion et inscription
 
 La page de connexion utilise une fenêtre modale : le formulaire d’inscription reste fermé tant que le membre ne clique pas sur **S’inscrire**. PBKDF2-SHA-256 est configuré à **100 000 itérations**, compatible avec Cloudflare Pages. Les ressources de connexion sont servies sans cache pour empêcher l’affichage d’un ancien CSS avec une nouvelle page HTML.
 
-## Inscription autonome des membres — version 2.2.0
+## Inscription autonome des membres — version 2.3.0
 
 La page de connexion comporte désormais un bouton **S’inscrire** placé à côté de **Se connecter**. Un membre peut créer son compte avec son nom, son entreprise ou activité, son adresse e-mail et un mot de passe robuste. La route serveur `POST /api/register` crée exclusivement un rôle `member`, une entreprise isolée et un plan **Free de 21 jours**, puis ouvre une session sécurisée. Le rôle, le statut et le plan ne sont jamais choisis par le navigateur. Les inscriptions sont limitées à trois tentatives par adresse IP et par e-mail sur une période de quinze minutes.
 

@@ -1,8 +1,8 @@
 {
   "name": "global-forex-trading-cloudflare",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "private": true,
-  "description": "GLOBAL FOREX TRADING sur Cloudflare Pages avec connexion professionnelle, inscription modale, KV, D1 et Super Admin.",
+  "description": "GLOBAL FOREX TRADING sur Cloudflare Pages avec inscription membre corrigée, KV, D1 et Super Admin.",
   "scripts": {
     "build": "npm run check && node scripts/build.mjs",
     "check": "node scripts/check.mjs && node scripts/test-login-routing.mjs && node --check public/_worker.js && node --check public/assets/login.js && node --check public/assets/cloud-shell.js",

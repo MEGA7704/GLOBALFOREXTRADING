@@ -893,7 +893,7 @@ async function handleStatus(env, auth) {
     ok: d1.includes("connecté") && kv.includes("connecté"),
     authenticated: Boolean(auth),
     services: { d1, kv },
-    version: "2.2.0"
+    version: "2.3.0"
   });
 }
 
@@ -913,10 +913,13 @@ async function handleRegister(env, request) {
   if (name.length < 2) throw new Error("Le nom et les prénoms sont requis.");
   if (companyName.length < 2) throw new Error("Le nom de l’entreprise ou de l’activité est requis.");
   if (!constantTimeEqual(password, passwordConfirm)) throw new Error("Les deux mots de passe ne correspondent pas.");
+  // Une seule adresse est réservée : l’adresse exacte du Super Admin.
+  // Aucun domaine ni aucune autre adresse membre ne doit être bloqué.
   const superAdminEmail = normalizeEmail(env.SUPER_ADMIN_EMAIL || "mega@services.local");
-  if (email === superAdminEmail) {
-    const error = new Error("Cette adresse est réservée à l’administration.");
-    error.status = 403;
+  if (constantTimeEqual(email, superAdminEmail)) {
+    const error = new Error(`L’adresse ${superAdminEmail} correspond au compte Super Admin. Utilisez une autre adresse e-mail pour créer un compte membre.`);
+    error.status = 409;
+    error.code = "SUPER_ADMIN_EMAIL_RESERVED";
     throw error;
   }
 

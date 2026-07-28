@@ -25,7 +25,7 @@ for (const route of ["/api/login", "/api/register", "/api/load", "/api/save", "/
 }
 await writeFile("public/build-info.json", JSON.stringify({
   name: "GLOBAL FOREX TRADING",
-  version: "2.2.0",
+  version: "2.3.0",
   architecture: "Cloudflare Pages Advanced Mode",
   buildAt: new Date().toISOString()
 }, null, 2));

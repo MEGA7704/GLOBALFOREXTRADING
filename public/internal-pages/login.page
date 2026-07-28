@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <meta name="description" content="Connexion sécurisée à GLOBAL FOREX TRADING Cloud Edition"/>
   <title>Connexion — GLOBAL FOREX TRADING</title>
-  <link rel="stylesheet" href="/assets/login.css?v=2.2.0"/>
+  <link rel="stylesheet" href="/assets/login.css?v=2.3.0"/>
 </head>
 <body>
   <main class="auth-layout">
@@ -84,7 +84,7 @@
 
       <div id="registerAlert" class="alert dialog-alert" role="alert" hidden></div>
 
-      <form id="registerForm" autocomplete="on">
+      <form id="registerForm" autocomplete="off">
         <div class="register-grid">
           <label>Nom et prénoms
             <input id="registerName" name="name" type="text" autocomplete="name" required minlength="2" maxlength="100" placeholder="Votre nom complet"/>
@@ -92,8 +92,9 @@
           <label>Entreprise ou activité
             <input id="registerCompany" name="companyName" type="text" autocomplete="organization" required minlength="2" maxlength="140" placeholder="Nom de votre entreprise ou activité"/>
           </label>
-          <label class="field-full">Adresse e-mail
-            <input id="registerEmail" name="email" type="email" autocomplete="email" required maxlength="180" placeholder="votre@email.com"/>
+          <label class="field-full">Adresse e-mail du membre
+            <input id="registerEmail" name="memberRegistrationEmail" type="email" autocomplete="off" autocapitalize="none" spellcheck="false" data-lpignore="true" data-1p-ignore="true" required maxlength="180" placeholder="membre@email.com"/>
+            <small class="field-help">Utilisez une adresse différente de celle du Super Admin. Seule l’adresse administrative exacte est réservée.</small>
           </label>
           <label>Mot de passe
             <span class="password-field"><input id="registerPassword" name="password" type="password" autocomplete="new-password" required minlength="12" maxlength="128" placeholder="12 caractères minimum"/><button type="button" data-toggle-password="registerPassword" aria-label="Afficher le mot de passe">◉</button></span>
@@ -116,6 +117,6 @@
     </div>
   </dialog>
 
-  <script src="/assets/login.js?v=2.2.0" defer></script>
+  <script src="/assets/login.js?v=2.3.0" defer></script>
 </body>
 </html>
