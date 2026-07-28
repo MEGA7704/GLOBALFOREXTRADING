@@ -4,7 +4,7 @@ Cette version modifie uniquement la présentation et la séparation visuelle des
 
 ## Interface
 
-- identité affichée : **GOBAL TRADING** ;
+- identité affichée : **GLOBAL FOREX TRADING** ;
 - sous-titre : **Forex Capture Analyzer Edition** ;
 - thème vert militaire avec accents dorés et ombres ;
 - page de connexion responsive ;

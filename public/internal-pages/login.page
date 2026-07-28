@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <meta name="description" content="Connexion sécurisée à GOBAL TRADING — Forex Capture Analyzer Edition"/>
-  <title>Connexion — GOBAL TRADING</title>
-  <link rel="stylesheet" href="/assets/login.css?v=2.6.0"/>
+  <meta name="description" content="Connexion sécurisée à GLOBAL FOREX TRADING — Forex Capture Analyzer Edition"/>
+  <title>Connexion — GLOBAL FOREX TRADING</title>
+  <link rel="stylesheet" href="/assets/login.css?v=2.7.0"/>
 </head>
 <body>
   <main class="auth-layout">
-    <section class="auth-visual" aria-label="Présentation de GOBAL TRADING">
+    <section class="auth-visual" aria-label="Présentation de GLOBAL FOREX TRADING">
       <div class="grid-glow" aria-hidden="true"></div>
       <div class="visual-content">
-        <h1>GOBAL TRADING</h1>
+        <h1>GLOBAL FOREX TRADING</h1>
         <p class="visual-subtitle">Forex Capture Analyzer Edition</p>
         <p class="visual-description">une plateforme sécurisée d’analyse de captures Forex, conçue pour détecter les tendances, identifier les zones clés et faciliter la prise de décision grâce à des indicateurs visuels professionnels.</p>
       </div>
@@ -21,7 +21,7 @@
     <section class="auth-panel">
       <div class="auth-card">
         <div class="auth-card__top">
-          <h2>GOBAL TRADING</h2>
+          <h2>GLOBAL FOREX TRADING</h2>
           <p>Forex Capture Analyzer Edition</p>
         </div>
 
@@ -144,6 +144,6 @@
     </div>
   </dialog>
 
-  <script src="/assets/login.js?v=2.6.0" defer></script>
+  <script src="/assets/login.js?v=2.7.0" defer></script>
 </body>
 </html>

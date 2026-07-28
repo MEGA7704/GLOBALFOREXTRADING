@@ -1,4 +1,4 @@
-# GLOBAL FOREX TRADING — Version 2.3.0
+# GLOBAL FOREX TRADING — Version 2.7.0
 
 ## Correction V8
 

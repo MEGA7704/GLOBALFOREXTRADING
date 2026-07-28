@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Abonnement expiré — GOBAL TRADING</title>
+  <title>Abonnement expiré — GLOBAL FOREX TRADING</title>
   <link rel="stylesheet" href="/assets/login.css?v=2.4.0"/>
   <style>
     .expired-actions{display:grid;gap:10px;margin-top:20px}.secondary-btn{width:100%;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;border-radius:14px;padding:13px;font-weight:900;cursor:pointer}.plan-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}.plan-summary article{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);border-radius:14px;padding:13px}.plan-summary b{display:block;font-size:19px;color:#f0c763}.plan-summary span{font-size:11px;color:#9aa9bc}.expired-note{color:#c9d4e2;line-height:1.55;font-size:13px}

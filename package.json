@@ -1,8 +1,8 @@
 {
   "name": "global-forex-trading-cloudflare",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "private": true,
-  "description": "GOBAL TRADING — interface de connexion épurée, inscription membre et demandes sécurisées de réinitialisation sur Cloudflare Pages.",
+  "description": "GLOBAL FOREX TRADING — interface de connexion épurée, inscription membre et demandes sécurisées de réinitialisation sur Cloudflare Pages.",
   "scripts": {
     "build": "npm run check && node scripts/build.mjs",
     "check": "node scripts/check.mjs && node scripts/test-login-routing.mjs && node --check public/_worker.js && node --check public/assets/login.js && node --check public/assets/cloud-shell.js",

@@ -2,7 +2,7 @@
 
 ## Interface
 
-- Titres « GOBAL TRADING » et sous-titres centrés dans les deux panneaux.
+- Titres « GLOBAL FOREX TRADING » et sous-titres centrés dans les deux panneaux.
 - Suppression de « ÉDITION SÉCURISÉE CLOUD ».
 - Remplacement de la description du panneau gauche par la présentation demandée.
 - Suppression des quatre cartes KV, D1, CSRF et PRO.

@@ -79,7 +79,7 @@ for (const expected of ["showRegisterButton", "registerDialog", "registerForm", 
   if (!loginPage.includes(expected)) throw new Error(`Interface d’inscription manquante : ${expected}`);
 }
 const appPage = await readFile("public/index.html", "utf8");
-for (const expected of ["GOBAL TRADING", "Forex Capture Analyzer Edition", "superAdminWorkspace", 'data-role-scope="super_admin"']) {
+for (const expected of ["GLOBAL FOREX TRADING", "Forex Capture Analyzer Edition", "superAdminWorkspace", 'data-role-scope="super_admin"']) {
   if (!appPage.includes(expected)) throw new Error(`Correction d’interface manquante : ${expected}`);
 }
 if (appPage.includes('<section class="topbar">')) throw new Error("Ancien en-tête dupliqué encore présent.");

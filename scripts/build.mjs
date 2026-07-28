@@ -25,8 +25,8 @@ for (const route of ["/api/login", "/api/register", "/api/password-reset-request
   if (!worker.includes(route)) throw new Error(`Route serveur manquante : ${route}`);
 }
 await writeFile("public/build-info.json", JSON.stringify({
-  name: "GOBAL TRADING",
-  version: "2.6.0",
+  name: "GLOBAL FOREX TRADING",
+  version: "2.7.0",
   architecture: "Cloudflare Pages Advanced Mode",
   buildAt: new Date().toISOString()
 }, null, 2));
