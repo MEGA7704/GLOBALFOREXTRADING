@@ -1,4 +1,4 @@
-# Forex Capture Analyzer Pro — Cloudflare Pages sécurisé
+# GLOBAL FOREX TRADING — Cloudflare Pages sécurisé
 
 Version 2.0 convertie en projet GitHub + Cloudflare Pages **Advanced Mode** avec routeur serveur unique dans `public/_worker.js`.
 
@@ -31,7 +31,7 @@ Le mot de passe initial doit être ajouté comme secret Cloudflare `SUPER_ADMIN_
 Après la première connexion, utilisez **Compte → Changer mon mot de passe**, puis vous pouvez supprimer le secret initial :
 
 ```bash
-npx wrangler pages secret delete SUPER_ADMIN_INITIAL_PASSWORD --project-name=forex-capture-analyzer-pro
+npx wrangler pages secret delete SUPER_ADMIN_INITIAL_PASSWORD --project-name=global-forex-trading
 ```
 
 ## Plans membres

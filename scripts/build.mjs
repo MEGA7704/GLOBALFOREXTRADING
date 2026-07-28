@@ -18,7 +18,7 @@ for (const route of ["/api/login", "/api/load", "/api/save", "/api/admin/account
   if (!worker.includes(route)) throw new Error(`Route serveur manquante : ${route}`);
 }
 await writeFile("public/build-info.json", JSON.stringify({
-  name: "Forex Capture Analyzer Pro",
+  name: "GLOBAL FOREX TRADING",
   version: "2.0.0",
   architecture: "Cloudflare Pages Advanced Mode",
   buildAt: new Date().toISOString()

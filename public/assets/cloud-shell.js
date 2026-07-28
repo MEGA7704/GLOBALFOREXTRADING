@@ -494,7 +494,7 @@
   }
 
   function support() {
-    window.open("https://wa.me/2250777041790?text=" + encodeURIComponent("Bonjour, j’ai besoin d’aide sur Forex Capture Analyzer PRO Cloud Edition."), "_blank", "noopener,noreferrer");
+    window.open("https://wa.me/2250777041790?text=" + encodeURIComponent("Bonjour, j’ai besoin d’aide sur GLOBAL FOREX TRADING Cloud Edition."), "_blank", "noopener,noreferrer");
   }
 
   function action(name) {

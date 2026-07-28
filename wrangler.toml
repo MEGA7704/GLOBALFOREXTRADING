@@ -1,4 +1,4 @@
-name = "forex-capture-analyzer-pro"
+name = "global-forex-trading"
 compatibility_date = "2026-07-28"
 pages_build_output_dir = "./public"
 
@@ -13,7 +13,7 @@ database_id = "c15a88c1-f0c6-4c1d-9807-b29c0c0a25ea"
 migrations_dir = "migrations"
 
 [vars]
-APP_NAME = "Forex Capture Analyzer Pro"
+APP_NAME = "GLOBAL FOREX TRADING"
 SUPER_ADMIN_EMAIL = "mega@services.local"
 SESSION_HOURS = "12"
 FREE_PLAN_DAYS = "21"

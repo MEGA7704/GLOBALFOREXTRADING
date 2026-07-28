@@ -1,17 +1,17 @@
 {
-  "name": "forex-capture-analyzer-pro-cloudflare",
+  "name": "global-forex-trading-cloudflare",
   "version": "2.0.0",
   "private": true,
-  "description": "Forex Capture Analyzer Pro sur Cloudflare Pages Advanced Mode avec KV, D1, multi-entreprises et Super Admin.",
+  "description": "GLOBAL FOREX TRADING sur Cloudflare Pages Advanced Mode avec KV, D1, multi-entreprises et Super Admin.",
   "scripts": {
     "build": "node scripts/build.mjs",
     "check": "node scripts/check.mjs && node --check public/_worker.js && node --check public/assets/login.js && node --check public/assets/cloud-shell.js",
     "dev": "wrangler pages dev",
-    "deploy": "wrangler pages deploy public --project-name=forex-capture-analyzer-pro",
+    "deploy": "wrangler pages deploy public --project-name=global-forex-trading",
     "db:migrate:local": "wrangler d1 migrations apply Forex_d1 --local",
     "db:migrate:remote": "wrangler d1 migrations apply Forex_d1 --remote",
-    "secret:pepper": "wrangler pages secret put AUTH_PEPPER --project-name=forex-capture-analyzer-pro",
-    "secret:superadmin": "wrangler pages secret put SUPER_ADMIN_INITIAL_PASSWORD --project-name=forex-capture-analyzer-pro"
+    "secret:pepper": "wrangler pages secret put AUTH_PEPPER --project-name=global-forex-trading",
+    "secret:superadmin": "wrangler pages secret put SUPER_ADMIN_INITIAL_PASSWORD --project-name=global-forex-trading"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"
