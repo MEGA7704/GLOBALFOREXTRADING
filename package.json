@@ -1,11 +1,11 @@
 {
   "name": "global-forex-trading-cloudflare",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "private": true,
   "description": "GLOBAL FOREX TRADING sur Cloudflare Pages Advanced Mode avec KV, D1, multi-entreprises et Super Admin.",
   "scripts": {
     "build": "npm run check && node scripts/build.mjs",
-    "check": "node scripts/check.mjs && node --check public/_worker.js && node --check public/assets/login.js && node --check public/assets/cloud-shell.js",
+    "check": "node scripts/check.mjs && node scripts/test-login-routing.mjs && node --check public/_worker.js && node --check public/assets/login.js && node --check public/assets/cloud-shell.js",
     "dev": "wrangler pages dev",
     "deploy": "wrangler pages deploy public --project-name=global-forex-trading",
     "db:migrate:local": "wrangler d1 migrations apply Forex_d1 --local",
@@ -18,5 +18,6 @@
   },
   "engines": {
     "node": ">=20"
-  }
+  },
+  "type": "module"
 }

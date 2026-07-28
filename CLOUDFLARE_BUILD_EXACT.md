@@ -88,3 +88,13 @@ https://globalforextrading.pages.dev/login
 ```
 
 N’ajoutez pas `login.html` et ne recréez pas de règle `_redirects` pour `/login`. Cloudflare Pages gère automatiquement l’URL HTML canonique sans extension.
+
+## Vérification après déploiement V4
+
+Ouvrir directement :
+
+```text
+https://globalforextrading.pages.dev/login
+```
+
+Cette URL doit afficher la page de connexion sans modifier l'adresse en `/login.html`. Le build `npm run build` supprime automatiquement les anciens fichiers HTML de connexion conservés dans le dépôt.

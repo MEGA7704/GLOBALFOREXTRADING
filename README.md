@@ -1,5 +1,26 @@
 # GLOBAL FOREX TRADING — Cloudflare Pages sécurisé
 
+## Correctif V4 — boucle de redirection éliminée
+
+La page publique `/login` n'est plus servie via un fichier `.html`. Elle est lue par `public/_worker.js` depuis `public/internal-pages/login.page`, puis renvoyée directement avec un statut `200` et `Content-Type: text/html`. Cela empêche Cloudflare Pages de rediriger `/login` vers `/login.html`.
+
+Le build supprime automatiquement les anciens fichiers suivants s'ils sont encore présents dans GitHub :
+
+```text
+public/_redirects
+public/login.html
+public/plan-expired.html
+```
+
+Après déploiement, le comportement attendu est :
+
+```text
+/login                 → 200 OK
+/login.html?next=%2F   → 308 vers /login?next=%2F, puis 200 OK
+/ sans session         → 303 vers /login?next=%2F, puis 200 OK
+```
+
+
 Version 2.0 convertie en projet GitHub + Cloudflare Pages **Advanced Mode** avec routeur serveur unique dans `public/_worker.js`.
 
 ## Corrections de sécurité appliquées
@@ -142,7 +163,7 @@ CLOUDFLARE_BUILD_EXACT.md
 
 L’application reste un outil éducatif d’aide à l’analyse. Elle ne garantit aucun résultat financier.
 
-## Correction de la boucle `/login` — version 2.0.2
+## Correction de la boucle `/login` — version 2.0.3
 
 Cloudflare Pages redirige automatiquement `login.html` vers l’URL canonique `/login`.
 Dans la version précédente, le Worker demandait de nouveau `/login.html` à `env.ASSETS`, ce qui pouvait produire la boucle `/login` → `/login.html` → `/login`.

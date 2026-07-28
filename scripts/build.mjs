@@ -2,11 +2,13 @@ import { access, readFile, writeFile, rm } from "node:fs/promises";
 
 // Nettoyage défensif d'un ancien fichier de redirection conservé dans GitHub.
 await rm("public/_redirects", { force: true });
+await rm("public/login.html", { force: true });
+await rm("public/plan-expired.html", { force: true });
 
 const required = [
   "public/index.html",
-  "public/login.html",
-  "public/plan-expired.html",
+  "public/internal-pages/login.page",
+  "public/internal-pages/plan-expired.page",
   "public/_worker.js",
   "public/assets/cloud-shell.js",
   "public/assets/cloud-shell.css",
@@ -22,7 +24,7 @@ for (const route of ["/api/login", "/api/load", "/api/save", "/api/admin/account
 }
 await writeFile("public/build-info.json", JSON.stringify({
   name: "GLOBAL FOREX TRADING",
-  version: "2.0.2",
+  version: "2.0.3",
   architecture: "Cloudflare Pages Advanced Mode",
   buildAt: new Date().toISOString()
 }, null, 2));

@@ -3,8 +3,8 @@ import { join } from "node:path";
 
 const required = [
   "public/index.html",
-  "public/login.html",
-  "public/plan-expired.html",
+  "public/internal-pages/login.page",
+  "public/internal-pages/plan-expired.page",
   "public/_worker.js",
   "public/assets/login.js",
   "public/assets/cloud-shell.js",
@@ -38,15 +38,21 @@ for (const expected of [
 }
 
 
-if (worker.includes('serveAsset(env, request, "/login.html")') || worker.includes('serveAsset(env, request, "/plan-expired.html")')) {
-  throw new Error("Risque de boucle Cloudflare détecté : env.ASSETS ne doit pas recevoir une route .html canonique.");
+if (worker.includes('serveAsset(env, request, "/login")') || worker.includes('serveAsset(env, request, "/login.html")')) {
+  throw new Error("Risque de boucle Cloudflare détecté : /login ne doit jamais être demandé à env.ASSETS.");
 }
-if (!worker.includes('serveAsset(env, request, "/login")') || !worker.includes('serveAsset(env, request, "/plan-expired")')) {
-  throw new Error("Routes HTML canoniques Cloudflare manquantes.");
+for (const expected of [
+  'serveInternalHtml(env, request, "/internal-pages/login.page")',
+  'serveInternalHtml(env, request, "/internal-pages/plan-expired.page")',
+  'path.startsWith("/internal-pages/")'
+]) {
+  if (!worker.includes(expected)) throw new Error(`Protection anti-redirection manquante : ${expected}`);
 }
 // Un ancien fichier _redirects peut rester dans GitHub après un simple téléversement.
 // On le supprime dans l'espace de build afin d'empêcher les boucles /login.
 await rm("public/_redirects", { force: true });
+await rm("public/login.html", { force: true });
+await rm("public/plan-expired.html", { force: true });
 
 async function collectFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
