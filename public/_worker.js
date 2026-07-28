@@ -6,7 +6,8 @@ const CSRF_TTL_SECONDS = 60 * 60;
 const LOGIN_WINDOW_SECONDS = 15 * 60;
 const LOGIN_MAX_ATTEMPTS = 5;
 const REGISTER_MAX_ATTEMPTS = 3;
-const PBKDF2_ITERATIONS = 600000;
+const PBKDF2_ITERATIONS = 100000;
+const PBKDF2_MAX_SUPPORTED_ITERATIONS = 100000;
 const FREE_PLAN_DAYS = 21;
 const BUSINESS_PLAN_DAYS = 365;
 const PAYMENT_URL = "https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=365000";
@@ -204,7 +205,7 @@ async function verifyPassword(password, storedValue, pepper) {
     const [algorithm, iterationText, saltText, hashText] = String(storedValue || "").split("$");
     if (algorithm !== "pbkdf2_sha256") return false;
     const iterations = Number(iterationText);
-    if (!Number.isInteger(iterations) || iterations < 100000 || iterations > 2000000) return false;
+    if (!Number.isInteger(iterations) || iterations < 100000 || iterations > PBKDF2_MAX_SUPPORTED_ITERATIONS) return false;
     const expected = base64UrlToBytes(hashText);
     const actual = await derivePassword(String(password || ""), pepper, base64UrlToBytes(saltText), iterations);
     if (expected.length !== actual.length) return false;
@@ -214,6 +215,22 @@ async function verifyPassword(password, storedValue, pepper) {
   } catch {
     return false;
   }
+}
+
+function inspectPasswordHash(storedValue) {
+  const [algorithm, iterationText, saltText, hashText] = String(storedValue || "").split("$");
+  const iterations = Number(iterationText);
+  return {
+    algorithm,
+    iterations,
+    saltText,
+    hashText,
+    supported: algorithm === "pbkdf2_sha256" &&
+      Number.isInteger(iterations) &&
+      iterations >= 100000 &&
+      iterations <= PBKDF2_MAX_SUPPORTED_ITERATIONS &&
+      Boolean(saltText) && Boolean(hashText)
+  };
 }
 
 function parseCookies(request) {
@@ -803,6 +820,44 @@ async function ensureInitialSuperAdmin(env, request, email, password) {
   return userId;
 }
 
+async function repairLegacySuperAdminCredential(env, request, user, email, password) {
+  if (!user || user.role !== "super_admin") return user;
+  const configuredEmail = normalizeEmail(env.SUPER_ADMIN_EMAIL || "mega@services.local");
+  if (email !== configuredEmail) return user;
+  const credential = inspectPasswordHash(user.password_hash);
+  if (credential.supported) return user;
+  if (!env.SUPER_ADMIN_INITIAL_PASSWORD || !constantTimeEqual(password, env.SUPER_ADMIN_INITIAL_PASSWORD)) return user;
+
+  const now = new Date().toISOString();
+  const passwordHash = await hashPassword(password, env.AUTH_PEPPER, { allowInitial: true });
+  await env.FOREX_D1.batch([
+    env.FOREX_D1.prepare(`
+      INSERT INTO password_credentials (user_id, password_hash, algorithm, updated_at)
+      VALUES (?, ?, 'pbkdf2_sha256', ?)
+      ON CONFLICT(user_id) DO UPDATE SET
+        password_hash = excluded.password_hash,
+        algorithm = excluded.algorithm,
+        updated_at = excluded.updated_at
+    `).bind(user.id, passwordHash, now),
+    env.FOREX_D1.prepare(`
+      UPDATE users
+      SET session_version = session_version + 1, updated_at = ?
+      WHERE id = ?
+    `).bind(now, user.id)
+  ]);
+  await invalidateAllUserSessions(env, user.id);
+  await auditBestEffort(env, request, {
+    actorUserId: user.id,
+    action: "SUPER_ADMIN_CREDENTIAL_REPAIRED",
+    details: { previousIterations: Number.isFinite(credential.iterations) ? credential.iterations : null }
+  });
+  return {
+    ...user,
+    password_hash: passwordHash,
+    session_version: Number(user.session_version || 1) + 1
+  };
+}
+
 function containsSensitiveState(value, depth = 0) {
   if (depth > 20 || value === null || typeof value !== "object") return false;
   if (Array.isArray(value)) return value.some(item => containsSensitiveState(item, depth + 1));
@@ -838,7 +893,7 @@ async function handleStatus(env, auth) {
     ok: d1.includes("connecté") && kv.includes("connecté"),
     authenticated: Boolean(auth),
     services: { d1, kv },
-    version: "2.1.0"
+    version: "2.2.0"
   });
 }
 
@@ -951,7 +1006,7 @@ async function handleLogin(env, request) {
   if (!password) throw new Error("E-mail et mot de passe requis.");
   const rateKeys = await assertLoginAllowed(env, request, email);
   await ensureInitialSuperAdmin(env, request, email, password);
-  const user = await env.FOREX_D1.prepare(`
+  let user = await env.FOREX_D1.prepare(`
     SELECT
       u.id, u.company_id, u.name, u.email, u.role, u.is_active,
       u.session_version, u.deleted_at,
@@ -959,11 +1014,27 @@ async function handleLogin(env, request) {
       c.status AS company_status, c.plan_code, c.plan_started_at, c.plan_expires_at,
       c.name AS company_name, c.id AS c_id
     FROM users u
-    JOIN password_credentials pc ON pc.user_id = u.id
+    LEFT JOIN password_credentials pc ON pc.user_id = u.id
     LEFT JOIN companies c ON c.id = u.company_id
     WHERE u.email = ?
     LIMIT 1
   `).bind(email).first();
+
+  user = await repairLegacySuperAdminCredential(env, request, user, email, password);
+  const credential = inspectPasswordHash(user?.password_hash);
+  if (user && !credential.supported && user.role !== "super_admin") {
+    await auditBestEffort(env, request, {
+      actorUserId: user.id,
+      actorCompanyId: user.company_id || null,
+      action: "PASSWORD_RESET_REQUIRED",
+      details: { email, iterations: Number.isFinite(credential.iterations) ? credential.iterations : null }
+    });
+    const error = new Error("Ce mot de passe utilise un ancien format incompatible. Demandez une réinitialisation au Super Admin.");
+    error.status = 409;
+    error.code = "PASSWORD_RESET_REQUIRED";
+    throw error;
+  }
+
   const valid = Boolean(
     user &&
     !user.deleted_at &&
@@ -1549,8 +1620,15 @@ function addSecurityHeaders(response, pathname) {
   output.headers.set("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
   output.headers.set("Cross-Origin-Resource-Policy", "same-origin");
   output.headers.set("Content-Security-Policy", "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; form-action 'self'; upgrade-insecure-requests");
-  if (pathname.startsWith("/api/") || pathname.endsWith(".html") || pathname === "/") {
-    output.headers.set("Cache-Control", "no-store");
+  if (
+    pathname.startsWith("/api/") ||
+    pathname.endsWith(".html") ||
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname === "/assets/login.css" ||
+    pathname === "/assets/login.js"
+  ) {
+    output.headers.set("Cache-Control", "no-store, max-age=0");
   }
   return output;
 }

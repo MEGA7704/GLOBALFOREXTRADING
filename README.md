@@ -1,6 +1,10 @@
 # GLOBAL FOREX TRADING — Cloudflare Pages sécurisé
 
-## Inscription autonome des membres — version 2.1.0
+## Correction V7 — connexion et inscription
+
+La page de connexion utilise une fenêtre modale : le formulaire d’inscription reste fermé tant que le membre ne clique pas sur **S’inscrire**. PBKDF2-SHA-256 est configuré à **100 000 itérations**, compatible avec Cloudflare Pages. Les ressources de connexion sont servies sans cache pour empêcher l’affichage d’un ancien CSS avec une nouvelle page HTML.
+
+## Inscription autonome des membres — version 2.2.0
 
 La page de connexion comporte désormais un bouton **S’inscrire** placé à côté de **Se connecter**. Un membre peut créer son compte avec son nom, son entreprise ou activité, son adresse e-mail et un mot de passe robuste. La route serveur `POST /api/register` crée exclusivement un rôle `member`, une entreprise isolée et un plan **Free de 21 jours**, puis ouvre une session sécurisée. Le rôle, le statut et le plan ne sont jamais choisis par le navigateur. Les inscriptions sont limitées à trois tentatives par adresse IP et par e-mail sur une période de quinze minutes.
 

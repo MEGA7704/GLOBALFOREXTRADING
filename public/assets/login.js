@@ -1,20 +1,21 @@
 (() => {
   const $ = (id) => document.getElementById(id);
-  const alertBox = $("authAlert");
+  const loginAlert = $("authAlert");
+  const registerAlert = $("registerAlert");
   const loginForm = $("loginForm");
   const registerForm = $("registerForm");
-  const passwordHelpBox = $("passwordHelpBox");
+  const registerDialog = $("registerDialog");
   let csrfToken = "";
 
-  function showAlert(message, type = "error") {
-    alertBox.textContent = message;
-    alertBox.className = `alert${type === "success" ? " success" : ""}`;
-    alertBox.hidden = false;
+  function showAlert(target, message, type = "error") {
+    target.textContent = message;
+    target.className = `alert${type === "success" ? " success" : ""}${target === registerAlert ? " dialog-alert" : ""}`;
+    target.hidden = false;
   }
 
-  function clearAlert() {
-    alertBox.hidden = true;
-    alertBox.textContent = "";
+  function clearAlert(target) {
+    target.hidden = true;
+    target.textContent = "";
   }
 
   async function api(path, options = {}) {
@@ -27,12 +28,14 @@
     const response = await fetch(path, {
       ...options,
       headers,
-      credentials: "same-origin"
+      credentials: "same-origin",
+      cache: "no-store"
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       const error = new Error(data.error || "Une erreur est survenue.");
       error.status = response.status;
+      error.code = data.code || "";
       throw error;
     }
     return data;
@@ -49,14 +52,17 @@
     if (!csrfToken) throw new Error("Impossible d’obtenir le jeton de sécurité.");
   }
 
-  function setMode(mode) {
-    const registering = mode === "register";
-    loginForm.hidden = registering;
-    registerForm.hidden = !registering;
-    passwordHelpBox.hidden = registering;
-    clearAlert();
-    const target = registering ? $("registerName") : $("loginEmail");
-    window.setTimeout(() => target?.focus(), 40);
+  function openRegisterDialog() {
+    clearAlert(registerAlert);
+    if (typeof registerDialog.showModal === "function") registerDialog.showModal();
+    else registerDialog.setAttribute("open", "");
+    window.setTimeout(() => $("registerName")?.focus(), 80);
+  }
+
+  function closeRegisterDialog() {
+    clearAlert(registerAlert);
+    if (typeof registerDialog.close === "function") registerDialog.close();
+    else registerDialog.removeAttribute("open");
   }
 
   async function loadStatus() {
@@ -68,15 +74,15 @@
         return;
       }
       $("systemState").textContent = status.ok ? "Système opérationnel" : "Configuration Cloudflare requise";
-    } catch (error) {
-      showAlert("Impossible de joindre le serveur Cloudflare. Vérifiez les bindings, secrets et la base D1.");
+    } catch {
+      showAlert(loginAlert, "Impossible de joindre le serveur Cloudflare. Vérifiez les bindings, les secrets et la base D1.");
       $("systemState").textContent = "Système indisponible";
     }
   }
 
   loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    clearAlert();
+    clearAlert(loginAlert);
     const button = $("loginButton");
     button.disabled = true;
     try {
@@ -88,25 +94,25 @@
           password: $("loginPassword").value
         })
       });
-      showAlert("Connexion réussie. Ouverture de votre espace…", "success");
+      showAlert(loginAlert, "Connexion réussie. Ouverture de votre espace…", "success");
       location.replace(safeNext());
     } catch (error) {
       if (error.status === 403) {
-        try { await refreshCsrf(); } catch { /* La prochaine tentative affichera l’erreur serveur. */ }
+        try { await refreshCsrf(); } catch { /* Nouvelle tentative manuelle. */ }
       }
-      showAlert(error.message);
+      showAlert(loginAlert, error.message);
       button.disabled = false;
     }
   });
 
   registerForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    clearAlert();
+    clearAlert(registerAlert);
     const button = $("registerButton");
     const password = $("registerPassword").value;
     const passwordConfirm = $("registerPasswordConfirm").value;
     if (password !== passwordConfirm) {
-      showAlert("Les deux mots de passe ne correspondent pas.");
+      showAlert(registerAlert, "Les deux mots de passe ne correspondent pas.");
       return;
     }
     button.disabled = true;
@@ -122,24 +128,33 @@
           passwordConfirm
         })
       });
-      showAlert("Compte créé. Votre plan Free de 21 jours est activé…", "success");
-      location.replace(safeNext());
+      showAlert(registerAlert, "Compte créé. Votre plan Free de 21 jours est activé…", "success");
+      window.setTimeout(() => location.replace(safeNext()), 450);
     } catch (error) {
       if (error.status === 403) {
-        try { await refreshCsrf(); } catch { /* La prochaine tentative affichera l’erreur serveur. */ }
+        try { await refreshCsrf(); } catch { /* Nouvelle tentative manuelle. */ }
       }
-      showAlert(error.message);
+      showAlert(registerAlert, error.message);
       button.disabled = false;
     }
   });
 
-  $("showRegisterButton").addEventListener("click", () => setMode("register"));
-  $("showLoginButton").addEventListener("click", () => setMode("login"));
+  $("showRegisterButton").addEventListener("click", openRegisterDialog);
+  $("closeRegisterDialog").addEventListener("click", closeRegisterDialog);
+  $("cancelRegisterButton").addEventListener("click", closeRegisterDialog);
+  registerDialog.addEventListener("click", (event) => {
+    if (event.target === registerDialog) closeRegisterDialog();
+  });
+  registerDialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeRegisterDialog();
+  });
 
   document.querySelectorAll("[data-toggle-password]").forEach((button) => {
     button.addEventListener("click", () => {
       const input = $(button.dataset.togglePassword);
       input.type = input.type === "password" ? "text" : "password";
+      button.setAttribute("aria-label", input.type === "password" ? "Afficher le mot de passe" : "Masquer le mot de passe");
     });
   });
 

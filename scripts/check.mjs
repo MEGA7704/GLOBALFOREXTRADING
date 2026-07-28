@@ -72,11 +72,14 @@ async function collectFiles(directory) {
 }
 
 const loginPage = await readFile("public/internal-pages/login.page", "utf8");
-for (const expected of ["showRegisterButton", "registerForm", "Créer mon compte", "plan Free de 21 jours"]) {
+for (const expected of ["showRegisterButton", "registerDialog", "registerForm", "Créer mon compte", "plan Free"]) {
   if (!loginPage.includes(expected)) throw new Error(`Interface d’inscription manquante : ${expected}`);
 }
 const loginScript = await readFile("public/assets/login.js", "utf8");
 if (!loginScript.includes('/api/register')) throw new Error("Appel navigateur /api/register manquant.");
+if (!loginScript.includes('showModal')) throw new Error("La fenêtre modale d’inscription n’est pas activée au clic.");
+if (/const PBKDF2_ITERATIONS = (?!100000)/.test(worker)) throw new Error("PBKDF2 doit utiliser exactement 100000 itérations sur Cloudflare Pages.");
+if (worker.includes('PBKDF2_ITERATIONS = 600000')) throw new Error("Ancienne valeur PBKDF2 incompatible détectée.");
 
 const browserFiles = (await collectFiles("public")).filter(file => file !== "public/_worker.js");
 for (const file of browserFiles) {
@@ -92,4 +95,4 @@ for (const file of browserFiles) {
   }
 }
 
-console.log("Vérification réussie : sécurité, inscription membre et routage Cloudflare conformes.");
+console.log("Vérification réussie : connexion professionnelle, inscription modale, PBKDF2 Cloudflare et sécurité conformes.");

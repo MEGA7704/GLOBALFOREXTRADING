@@ -20,12 +20,12 @@ const required = [
 
 for (const file of required) await access(file);
 const worker = await readFile("public/_worker.js", "utf8");
-for (const route of ["/api/login", "/api/load", "/api/save", "/api/admin/accounts"]) {
+for (const route of ["/api/login", "/api/register", "/api/load", "/api/save", "/api/admin/accounts"]) {
   if (!worker.includes(route)) throw new Error(`Route serveur manquante : ${route}`);
 }
 await writeFile("public/build-info.json", JSON.stringify({
   name: "GLOBAL FOREX TRADING",
-  version: "2.0.4",
+  version: "2.2.0",
   architecture: "Cloudflare Pages Advanced Mode",
   buildAt: new Date().toISOString()
 }, null, 2));
