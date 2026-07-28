@@ -3,18 +3,19 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <meta name="description" content="Connexion sécurisée à GLOBAL FOREX TRADING Cloud Edition"/>
-  <title>Connexion — GLOBAL FOREX TRADING</title>
-  <link rel="stylesheet" href="/assets/login.css?v=2.3.0"/>
+  <meta name="description" content="Connexion sécurisée à GOBAL TRADING — Forex Capture Analyzer Edition"/>
+  <title>Connexion — GOBAL TRADING</title>
+  <link rel="stylesheet" href="/assets/login.css?v=2.4.0"/>
 </head>
 <body>
   <main class="auth-layout">
-    <section class="auth-visual" aria-label="Présentation de GLOBAL FOREX TRADING">
+    <section class="auth-visual" aria-label="Présentation de GOBAL TRADING">
       <div class="grid-glow" aria-hidden="true"></div>
       <div class="visual-content">
-        <div class="visual-badge">CLOUDFLARE SECURE EDITION</div>
-        <h1>GLOBAL FOREX<br/><span>TRADING</span></h1>
-        <p>Analyse visuelle, données d’entreprise isolées et administration centralisée avec Cloudflare KV et D1.</p>
+        <div class="visual-badge">ÉDITION SÉCURISÉE CLOUD</div>
+        <h1>GOBAL<br/><span>TRADING</span></h1>
+        <p class="visual-subtitle">Forex Capture Analyzer Edition</p>
+        <p class="visual-description">Une interface d’analyse professionnelle, sécurisée et adaptée à tous les écrans.</p>
         <div class="feature-grid">
           <article><b>KV</b><span>Sessions sécurisées et limitation des tentatives</span></article>
           <article><b>D1</b><span>Comptes, données et journal d’audit</span></article>
@@ -28,11 +29,17 @@
     <section class="auth-panel">
       <div class="auth-card">
         <div class="auth-card__top">
-          <div class="mini-logo" aria-hidden="true">FX</div>
+          <div class="mini-logo" aria-hidden="true">GT</div>
           <div>
-            <h2>Connexion sécurisée</h2>
-            <p>Accédez à votre espace cloud</p>
+            <h2>GOBAL TRADING</h2>
+            <p>Forex Capture Analyzer Edition</p>
           </div>
+        </div>
+
+        <div class="auth-section-heading">
+          <span>ESPACE SÉCURISÉ</span>
+          <h3>Connexion</h3>
+          <p>Accédez à votre espace personnel cloud.</p>
         </div>
 
         <div id="authAlert" class="alert" role="alert" hidden></div>
@@ -72,7 +79,7 @@
     <div class="dialog-shell">
       <header class="dialog-head">
         <div class="dialog-title-wrap">
-          <div class="mini-logo mini-logo--small" aria-hidden="true">FX</div>
+          <div class="mini-logo mini-logo--small" aria-hidden="true">GT</div>
           <div>
             <span class="dialog-kicker">ESPACE MEMBRE</span>
             <h2 id="registerDialogTitle">Créer votre compte</h2>
@@ -117,6 +124,6 @@
     </div>
   </dialog>
 
-  <script src="/assets/login.js?v=2.3.0" defer></script>
+  <script src="/assets/login.js?v=2.4.0" defer></script>
 </body>
 </html>

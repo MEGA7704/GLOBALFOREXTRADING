@@ -75,6 +75,16 @@ const loginPage = await readFile("public/internal-pages/login.page", "utf8");
 for (const expected of ["showRegisterButton", "registerDialog", "registerForm", "Créer mon compte", "plan Free"]) {
   if (!loginPage.includes(expected)) throw new Error(`Interface d’inscription manquante : ${expected}`);
 }
+const appPage = await readFile("public/index.html", "utf8");
+for (const expected of ["GOBAL TRADING", "Forex Capture Analyzer Edition", "superAdminWorkspace", 'data-role-scope="super_admin"']) {
+  if (!appPage.includes(expected)) throw new Error(`Correction d’interface manquante : ${expected}`);
+}
+if (appPage.includes('<section class="topbar">')) throw new Error("Ancien en-tête dupliqué encore présent.");
+if (/onclick="openModal\('CONDITIONS GÉNÉRALES D’UTILISATION/.test(appPage)) throw new Error("Les boutons légaux sous la carte principale doivent être supprimés.");
+const shellScript = await readFile("public/assets/cloud-shell.js", "utf8");
+for (const expected of ["activateRoleInterface", 'showAdmin({ inline: true })', 'document.body.classList.add(isAdmin ? "super-admin-mode" : "member-mode")']) {
+  if (!shellScript.includes(expected)) throw new Error(`Séparation visuelle des rôles manquante : ${expected}`);
+}
 const loginScript = await readFile("public/assets/login.js", "utf8");
 if (!loginScript.includes('/api/register')) throw new Error("Appel navigateur /api/register manquant.");
 if (!loginScript.includes('showModal')) throw new Error("La fenêtre modale d’inscription n’est pas activée au clic.");

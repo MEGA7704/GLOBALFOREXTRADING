@@ -28,8 +28,8 @@
     const element = $("cloudSyncStatus");
     if (!element) return;
     element.className = `cloud-sync ${mode}`.trim();
-    const textNode = Array.from(element.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
-    if (textNode) textNode.textContent = ` ${label}`;
+    const labelNode = element.querySelector("span");
+    if (labelNode) labelNode.textContent = label;
     else element.append(` ${label}`);
   }
 
@@ -137,19 +137,42 @@
     $("cloudUserName").textContent = state.user.name;
     $("cloudUserRole").textContent = state.user.role === "super_admin" ? "Super Admin" : `${state.company?.name || "Entreprise"}`;
     $("cloudAvatar").textContent = state.user.name.trim().charAt(0).toUpperCase() || "U";
-    const adminButton = document.querySelector('[data-cloud-action="admin"]');
-    if (adminButton) adminButton.hidden = state.user.role !== "super_admin";
+
+    document.querySelectorAll("[data-role-scope]").forEach(element => {
+      element.hidden = element.dataset.roleScope !== state.user.role;
+    });
+
     const planBadge = $("cloudPlanBadge");
     if (planBadge) {
       if (state.user.role === "super_admin") {
-        planBadge.textContent = "SUPER ADMIN";
+        planBadge.textContent = "ADMINISTRATION";
         planBadge.className = "cloud-plan-badge admin";
+        planBadge.removeAttribute("title");
       } else {
         planBadge.textContent = `${state.plan?.label || "Plan"} · ${state.plan?.daysRemaining ?? 0} j`;
         planBadge.className = `cloud-plan-badge ${state.plan?.code || "free"}`;
         planBadge.title = `Expiration : ${formatDateOnly(state.plan?.expiresAt)}`;
       }
     }
+  }
+
+  function activateRoleInterface() {
+    const isAdmin = state.user?.role === "super_admin";
+    document.body.dataset.cloudRole = isAdmin ? "super_admin" : "member";
+    document.body.classList.remove("role-pending", "member-mode", "super-admin-mode", "locked");
+    document.body.classList.add(isAdmin ? "super-admin-mode" : "member-mode");
+
+    const tradingWorkspace = $("tradingWorkspace");
+    const adminWorkspace = $("superAdminWorkspace");
+    if (tradingWorkspace) tradingWorkspace.hidden = isAdmin;
+    if (adminWorkspace) adminWorkspace.hidden = !isAdmin;
+
+    if (isAdmin) {
+      const disclaimer = $("disclaimerOverlay");
+      if (disclaimer) disclaimer.style.display = "none";
+    }
+
+    window.dispatchEvent(new CustomEvent("cloud-auth-ready", { detail: { role: state.user?.role } }));
   }
 
   async function loadUser() {
@@ -159,10 +182,13 @@
     state.company = data.company;
     state.plan = data.plan;
     updateHeader();
+    activateRoleInterface();
     setSync("Cloud connecté");
     if (state.user.role === "member") {
       await loadCompanyData();
       setupFreePlanMessages();
+    } else {
+      await showAdmin({ inline: true });
     }
   }
 
@@ -301,24 +327,51 @@
     </article>`;
   }
 
-  async function showAdmin() {
+  async function showAdmin(options = {}) {
     if (state.user?.role !== "super_admin") return;
+    const inline = options.inline ?? document.body.classList.contains("super-admin-mode");
     const wrap = document.createElement("div");
     wrap.className = "admin-console";
     wrap.innerHTML = `
-      <div class="admin-overview">
-        <div><span>Administration globale</span><h2>Comptes des membres</h2><p>Création, activation, plans, assistance mot de passe et suppression.</p></div>
-        <div class="admin-overview-actions"><button class="primary" data-create>+ Nouveau membre</button><button data-audit>Journal sensible</button><button data-refresh>Actualiser</button></div>
-      </div>
-      <div class="admin-account-list"><div class="cloud-empty">Chargement des comptes…</div></div>`;
-    dialog("Section Super Admin", wrap, { className: "admin-dialog" });
+      <section class="admin-overview">
+        <div><span>CENTRE D’ADMINISTRATION</span><h1>Gestion des membres</h1><p>Gérez les comptes, les accès, les abonnements et les opérations sensibles.</p></div>
+        <div class="admin-overview-actions"><button class="primary" data-create>+ Nouveau membre</button><button data-audit>Journal sensible</button><button data-system>État du système</button><button data-refresh>Actualiser</button></div>
+      </section>
+      <section class="admin-summary" aria-label="Résumé des comptes">
+        <article><span>Total membres</span><b data-total>—</b></article>
+        <article><span>Comptes actifs</span><b data-active>—</b></article>
+        <article><span>Plan Free</span><b data-free>—</b></article>
+        <article><span>Plan Business</span><b data-business>—</b></article>
+      </section>
+      <section class="admin-members-panel">
+        <div class="admin-panel-head"><div><span>RÉPERTOIRE</span><h2>Liste des membres</h2></div><p>Chaque compte reste isolé dans son entreprise.</p></div>
+        <div class="admin-account-list"><div class="cloud-empty">Chargement des comptes…</div></div>
+      </section>`;
+
+    if (inline) {
+      const workspace = $("superAdminWorkspace");
+      if (!workspace) return;
+      workspace.hidden = false;
+      workspace.replaceChildren(wrap);
+    } else {
+      dialog("Gestion des membres", wrap, { className: "admin-dialog" });
+    }
+
     const list = wrap.querySelector(".admin-account-list");
+
+    function updateSummary(accounts) {
+      wrap.querySelector("[data-total]").textContent = String(accounts.length);
+      wrap.querySelector("[data-active]").textContent = String(accounts.filter(account => account.active).length);
+      wrap.querySelector("[data-free]").textContent = String(accounts.filter(account => account.plan?.code === "free").length);
+      wrap.querySelector("[data-business]").textContent = String(accounts.filter(account => account.plan?.code === "business").length);
+    }
 
     async function refresh() {
       list.innerHTML = `<div class="cloud-empty">Chargement des comptes…</div>`;
       try {
         const data = await api("/api/admin/accounts");
         const accounts = data.accounts || [];
+        updateSummary(accounts);
         if (!accounts.length) {
           list.innerHTML = `<div class="cloud-empty">Aucun compte membre. Cliquez sur « Nouveau membre ».</div>`;
           return;
@@ -405,8 +458,9 @@
 
     wrap.querySelector("[data-create]").addEventListener("click", () => showCreateMember(refresh));
     wrap.querySelector("[data-audit]").addEventListener("click", showAuditLogs);
+    wrap.querySelector("[data-system]").addEventListener("click", showSystemStatus);
     wrap.querySelector("[data-refresh]").addEventListener("click", refresh);
-    refresh();
+    await refresh();
   }
 
   function showCreateMember(onCreated) {
@@ -494,7 +548,7 @@
   }
 
   function support() {
-    window.open("https://wa.me/2250777041790?text=" + encodeURIComponent("Bonjour, j’ai besoin d’aide sur GLOBAL FOREX TRADING Cloud Edition."), "_blank", "noopener,noreferrer");
+    window.open("https://wa.me/2250777041790?text=" + encodeURIComponent("Bonjour, j’ai besoin d’aide sur GOBAL TRADING — Forex Capture Analyzer Edition."), "_blank", "noopener,noreferrer");
   }
 
   function action(name) {
@@ -502,11 +556,12 @@
       home: () => window.scrollTo({ top: 0, behavior: "smooth" }),
       upload: () => $("btnPick")?.click(),
       analyze: () => $("btnAnalyze")?.click(),
-      live: () => $("btnOpenLive")?.click(),
-      results: () => $("btnOpenResults")?.click(),
+      live: () => window.openModal?.("LIVE + Réglage bougies", "tpl_live"),
+      results: () => window.openModal?.("Résultats", "tpl_results"),
       history: showHistory,
-      guide: () => $("btnOpenGuide")?.click(),
-      admin: showAdmin,
+      guide: () => window.openModal?.("Guide d’utilisation", "tpl_guide"),
+      admin: () => showAdmin({ inline: true }),
+      audit: showAuditLogs,
       save: () => saveAnalysis(window.__FOREX_LAST_RESULT, { sourceType: "capture" }),
       status: showSystemStatus,
       password: changePassword,
@@ -522,9 +577,12 @@
       setTimeout(showPlanPopup, 250);
     }
     $("cloudUserMenu")?.classList.remove("show");
+    $("cloudMenu")?.classList.remove("show");
+    $("cloudShell")?.classList.remove("menu-open");
+    $("cloudMenuToggle")?.setAttribute("aria-expanded", "false");
   }
 
-  document.querySelectorAll("[data-cloud-action]").forEach(button => button.addEventListener("click", () => action(button.dataset.cloudAction)));
+  document.querySelectorAll("[data-cloud-action]").forEach(button => button.addEventListener("click", event => { event.preventDefault(); action(button.dataset.cloudAction); }));
   $("cloudUserButton")?.addEventListener("click", event => {
     event.stopPropagation();
     const menu = $("cloudUserMenu");

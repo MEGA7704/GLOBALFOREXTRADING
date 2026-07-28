@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>GLOBAL FOREX TRADING — Cloud Edition</title>
+<title>GOBAL TRADING — Forex Capture Analyzer Edition</title>
 <style>
   :root{
     --bg1:#0b1020; --bg2:#0d2b2b; --bg3:#1a0f2e;
@@ -372,39 +372,44 @@
   }
 
 </style>
-  <link rel="stylesheet" href="/assets/cloud-shell.css"/>
+  <link rel="stylesheet" href="/assets/cloud-shell.css?v=2.4.0"/>
 </head>
-<body>
+<body class="role-pending">
 
 <header class="cloud-shell" id="cloudShell">
-  <div class="cloud-shell__brand">
-    <div class="cloud-shell__logo" aria-hidden="true">FX</div>
-    <div>
-      <strong>FOREX CAPTURE ANALYZER PRO</strong>
-      <span>Cloud Edition · KV + D1</span>
+  <a class="cloud-shell__brand" href="#" data-cloud-action="home" aria-label="Accueil GOBAL TRADING">
+    <div class="cloud-shell__logo" aria-hidden="true">GT</div>
+    <div class="cloud-shell__brand-copy">
+      <strong>GOBAL TRADING</strong>
+      <span>Forex Capture Analyzer Edition</span>
     </div>
-  </div>
+  </a>
+
   <button class="cloud-shell__toggle" id="cloudMenuToggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
+
   <nav class="cloud-shell__nav" id="cloudMenu" aria-label="Navigation principale">
-    <button type="button" data-cloud-action="home">Accueil</button>
-    <button type="button" data-cloud-action="upload">Téléverser</button>
-    <button type="button" data-cloud-action="analyze">Analyser</button>
-    <button type="button" data-cloud-action="live">LIVE</button>
-    <button type="button" data-cloud-action="results">Résultats</button>
-    <button type="button" data-cloud-action="history">Historique</button>
-    <button type="button" data-cloud-action="guide">Guide</button>
-    <button type="button" data-cloud-action="admin" hidden>Super Admin</button>
+    <button type="button" data-cloud-action="home" data-role-scope="member">Accueil</button>
+    <button type="button" data-cloud-action="upload" data-role-scope="member">Téléverser</button>
+    <button type="button" data-cloud-action="analyze" data-role-scope="member">Analyser</button>
+    <button type="button" data-cloud-action="live" data-role-scope="member">LIVE</button>
+    <button type="button" data-cloud-action="results" data-role-scope="member">Résultats</button>
+    <button type="button" data-cloud-action="history" data-role-scope="member">Historique</button>
+    <button type="button" data-cloud-action="guide" data-role-scope="member">Guide</button>
+    <button type="button" data-cloud-action="admin" data-role-scope="super_admin" hidden>Membres</button>
+    <button type="button" data-cloud-action="audit" data-role-scope="super_admin" hidden>Journal</button>
+    <button type="button" data-cloud-action="status" data-role-scope="super_admin" hidden>Système</button>
   </nav>
+
   <div class="cloud-shell__account">
     <span class="cloud-plan-badge free" id="cloudPlanBadge">PLAN</span>
-    <span class="cloud-sync" id="cloudSyncStatus"><i></i> Cloud prêt</span>
+    <span class="cloud-sync" id="cloudSyncStatus"><i></i><span>Cloud prêt</span></span>
     <button type="button" class="cloud-user" id="cloudUserButton" aria-haspopup="menu" aria-expanded="false">
       <span class="cloud-avatar" id="cloudAvatar">U</span>
       <span class="cloud-user__copy"><b id="cloudUserName">Utilisateur</b><small id="cloudUserRole">Compte sécurisé</small></span>
-      <span aria-hidden="true">⌄</span>
+      <span class="cloud-chevron" aria-hidden="true">⌄</span>
     </button>
     <div class="cloud-user-menu" id="cloudUserMenu" role="menu">
-      <button type="button" data-cloud-action="save">Enregistrer le résultat</button>
+      <button type="button" data-cloud-action="save" data-role-scope="member">Enregistrer le résultat</button>
       <button type="button" data-cloud-action="status">État du système</button>
       <button type="button" data-cloud-action="password">Changer mon mot de passe</button>
       <button type="button" data-cloud-action="support">Support WhatsApp</button>
@@ -415,40 +420,12 @@
 </header>
 <div class="cloud-shell-spacer" aria-hidden="true"></div>
 
+<main id="superAdminWorkspace" class="super-admin-workspace" hidden aria-live="polite">
+  <div class="admin-page-loading">Chargement de l’administration…</div>
+</main>
 
-<div class="wrap">
-  <!-- TOP BANNER (menu-like) -->
-  <section class="topbar">
-    <div class="bd">
-      <div class="brand">
-        <div class="logo"></div>
-        <div class="title">
-          <h1><span style="color:yellow;">GLOBAL FOREX TRADING</span></h1>
-          
-        </div>
-      </div>
 
-      
-      <div class="bannerBtns">
-        <button class="bbtn primary" id="btnOpenLive">
-          <span>LIVE + Réglage bougies</span>
-          <span class="tag" id="liveTag">LIVE: OFF</span>
-        </button>
-
-        <button class="bbtn warn" id="btnOpenResults">
-          <span>Résultats</span>
-          <span class="tag mono" id="miniConclusion">—</span>
-        </button>
-
-        <button class="bbtn" id="btnOpenGuide">
-          <span>Guide</span>
-          <span class="tag">Aide</span>
-        </button>
-</div>
-
-    </div>
-  </section>
-
+<div class="wrap" id="tradingWorkspace">
   <!-- VISUAL ZONE + CONTROLE -->
   <section class="card visualCard">
     <input id="fileInput" type="file" accept=".png,.jpg,.jpeg,.webp" />
@@ -480,14 +457,6 @@
         <b>LIMIT</b> (sortie si défavorable) + <b>TP</b> (take profit) sont des <b>zones visuelles</b> (proxy), pas des prix exacts.
       </div>
     </div>
-  
-    <div style="border-top:1px solid rgba(255,255,255,.08); padding:14px; text-align:center;">
-        <button class="btn small" onclick="openModal('CONDITIONS GÉNÉRALES D’UTILISATION (CGU)','tpl_cgu')">CONDITIONS GÉNÉRALES D’UTILISATION (CGU)</button>
-        <button class="btn small" onclick="openModal('POLITIQUE DE CONFIDENTIALITÉ','tpl_privacy')">POLITIQUE DE CONFIDENTIALITÉ</button>
-        <button class="btn small" onclick="openModal('CONDITIONS GÉNÉRALES DE VENTE (CGV)','tpl_cgv')">CONDITIONS GÉNÉRALES DE VENTE (CGV)</button>
-        <button class="btn small" onclick="openModal('MENTIONS LÉGALES','tpl_mentions')">MENTIONS LÉGALES</button>
-    </div>
-
 </section>
 </div>
 
@@ -626,8 +595,8 @@ function openModal(title, templateId){
   if(templateId==="tpl_results") renderResultsToModal();
   if(templateId==="tpl_live") refreshLiveBadge();
 }
-$("btnOpenLive").addEventListener("click", ()=> openModal("LIVE + Réglage bougies", "tpl_live"));
-$("btnOpenResults").addEventListener("click", ()=> openModal("Résultats", "tpl_results"));
+$("btnOpenLive")?.addEventListener("click", ()=> openModal("LIVE + Réglage bougies", "tpl_live"));
+$("btnOpenResults")?.addEventListener("click", ()=> openModal("Résultats", "tpl_results"));
 
 /* ---------- Guide popup + WhatsApp support ---------- */
 const SUPPORT_WA = "+2250777041790";
@@ -1352,7 +1321,7 @@ function applyResultsUI(meta){
   window.__FOREX_LAST_RESULT = LAST_RES;
 
   const c = (meta && meta.conclusionText) ? meta.conclusionText : "—";
-  $("miniConclusion").textContent = c.length>34 ? c.slice(0,34)+"…" : c;
+  if ($("miniConclusion")) $("miniConclusion").textContent = c.length>34 ? c.slice(0,34)+"…" : c;
 
   // If results modal open, update
   renderResultsToModal();
@@ -1404,7 +1373,7 @@ $("btnReset").addEventListener("click", ()=>{
   HAS_IMG = false;
   LAST = null;
   LAST_RES = null;
-  $("miniConclusion").textContent = "—";
+  if ($("miniConclusion")) $("miniConclusion").textContent = "—";
   setStatus("Reset effectué.");
   draw();
 });
@@ -1420,7 +1389,7 @@ LIVE_VIDEO.playsInline=true;
 LIVE_VIDEO.muted=true;
 
 function setLiveUI(on){
-  $("liveTag").textContent = on ? "LIVE: ON" : "LIVE: OFF";
+  if ($("liveTag")) $("liveTag").textContent = on ? "LIVE: ON" : "LIVE: OFF";
   const dot = modalBody.querySelector("#dotLive");
   const st = modalBody.querySelector("#liveStatus");
   if(dot) dot.classList.toggle("on", on);
@@ -1529,6 +1498,17 @@ function showDisclaimerGate(){
   const overlay = document.getElementById("disclaimerOverlay");
   const btn = document.getElementById("acceptDisclaimer");
   if(!overlay || !btn) return;
+
+  const role = document.body.dataset.cloudRole || "";
+  if(!role){
+    window.addEventListener("cloud-auth-ready", showDisclaimerGate, { once:true });
+    return;
+  }
+  if(role === "super_admin"){
+    overlay.style.display="none";
+    document.body.classList.remove("locked");
+    return;
+  }
 
   const accepted = sessionStorage.getItem("disclaimerAccepted")==="yes";
   if(accepted){
@@ -2659,6 +2639,6 @@ Tout litige relatif à l’utilisation du site sera soumis aux juridictions comp
 </template>
 
 
-  <script src="/assets/cloud-shell.js" defer></script>
+  <script src="/assets/cloud-shell.js?v=2.4.0" defer></script>
 </body>
 </html>
