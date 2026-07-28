@@ -1,4 +1,4 @@
-import { access, readFile, readdir } from "node:fs/promises";
+import { access, readFile, readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 
 const required = [
@@ -44,12 +44,9 @@ if (worker.includes('serveAsset(env, request, "/login.html")') || worker.include
 if (!worker.includes('serveAsset(env, request, "/login")') || !worker.includes('serveAsset(env, request, "/plan-expired")')) {
   throw new Error("Routes HTML canoniques Cloudflare manquantes.");
 }
-try {
-  await access("public/_redirects");
-  throw new Error("public/_redirects ne doit pas être présent : le Worker gère déjà /login et /app.");
-} catch (error) {
-  if (error?.code !== "ENOENT") throw error;
-}
+// Un ancien fichier _redirects peut rester dans GitHub après un simple téléversement.
+// On le supprime dans l'espace de build afin d'empêcher les boucles /login.
+await rm("public/_redirects", { force: true });
 
 async function collectFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -76,4 +73,4 @@ for (const file of browserFiles) {
   }
 }
 
-console.log("Vérification réussie : authentification, CSRF, isolation entreprise et architecture Advanced Mode conformes, sans boucle de redirection.");
+console.log("Vérification réussie : sécurité conforme et ancien public/_redirects supprimé automatiquement.");

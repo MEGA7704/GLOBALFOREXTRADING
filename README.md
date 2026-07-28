@@ -142,7 +142,7 @@ CLOUDFLARE_BUILD_EXACT.md
 
 L’application reste un outil éducatif d’aide à l’analyse. Elle ne garantit aucun résultat financier.
 
-## Correction de la boucle `/login` — version 2.0.1
+## Correction de la boucle `/login` — version 2.0.2
 
 Cloudflare Pages redirige automatiquement `login.html` vers l’URL canonique `/login`.
 Dans la version précédente, le Worker demandait de nouveau `/login.html` à `env.ASSETS`, ce qui pouvait produire la boucle `/login` → `/login.html` → `/login`.

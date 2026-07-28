@@ -1,4 +1,7 @@
-import { access, readFile, writeFile } from "node:fs/promises";
+import { access, readFile, writeFile, rm } from "node:fs/promises";
+
+// Nettoyage défensif d'un ancien fichier de redirection conservé dans GitHub.
+await rm("public/_redirects", { force: true });
 
 const required = [
   "public/index.html",
@@ -19,7 +22,7 @@ for (const route of ["/api/login", "/api/load", "/api/save", "/api/admin/account
 }
 await writeFile("public/build-info.json", JSON.stringify({
   name: "GLOBAL FOREX TRADING",
-  version: "2.0.1",
+  version: "2.0.2",
   architecture: "Cloudflare Pages Advanced Mode",
   buildAt: new Date().toISOString()
 }, null, 2));
