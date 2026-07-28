@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="description" content="Connexion sécurisée à Forex Capture Analyzer Pro Cloud Edition"/>
+  <title>Connexion — Forex Capture Analyzer Pro</title>
+  <link rel="stylesheet" href="/assets/login.css"/>
+</head>
+<body>
+  <main class="auth-layout">
+    <section class="auth-visual" aria-label="Présentation">
+      <div class="grid-glow"></div>
+      <div class="visual-content">
+        <div class="visual-badge">CLOUDFLARE SECURE EDITION</div>
+        <h1>FOREX CAPTURE<br/><span>ANALYZER PRO</span></h1>
+        <p>Analyse visuelle, données d’entreprise isolées et administration centralisée avec Cloudflare KV et D1.</p>
+        <div class="feature-grid">
+          <article><b>KV</b><span>Sessions sécurisées et limitation des tentatives</span></article>
+          <article><b>D1</b><span>Comptes, données et journal d’audit</span></article>
+          <article><b>CSRF</b><span>Protection obligatoire des écritures</span></article>
+          <article><b>PRO</b><span>Gestion Free 21 jours et Business 365 jours</span></article>
+        </div>
+        <div class="risk-note">Outil éducatif d’aide à l’analyse. Les marchés financiers comportent un risque de perte.</div>
+      </div>
+    </section>
+
+    <section class="auth-panel">
+      <div class="auth-card">
+        <div class="auth-card__top">
+          <div class="mini-logo">FX</div>
+          <div><h2>Connexion sécurisée</h2><p>Accédez à votre espace cloud</p></div>
+        </div>
+
+        <div id="authAlert" class="alert" role="alert" hidden></div>
+
+        <form id="loginForm" autocomplete="on">
+          <label>Adresse e-mail
+            <input id="loginEmail" name="email" type="email" autocomplete="username" required maxlength="180" placeholder="votre@email.com"/>
+          </label>
+          <label>Mot de passe
+            <span class="password-field"><input id="loginPassword" name="password" type="password" autocomplete="current-password" required minlength="10" maxlength="128" placeholder="Votre mot de passe"/><button type="button" data-toggle-password="loginPassword" aria-label="Afficher le mot de passe">◉</button></span>
+          </label>
+          <button class="primary-btn" id="loginButton" type="submit"><span>Se connecter</span><i>→</i></button>
+        </form>
+
+        <div class="setup-note" style="margin-top:14px">
+          <b>Mot de passe perdu :</b> contactez le Super Admin, qui peut réinitialiser votre accès sans consulter votre ancien mot de passe.
+        </div>
+
+        <div class="auth-meta"><span id="systemState">Vérification du système…</span><span>Cookie HttpOnly sécurisé</span></div>
+      </div>
+      <p class="copyright">© <span id="currentYear"></span> MEGA SERVICES SARL U · Côte d’Ivoire</p>
+    </section>
+  </main>
+  <script src="/assets/login.js" defer></script>
+</body>
+</html>

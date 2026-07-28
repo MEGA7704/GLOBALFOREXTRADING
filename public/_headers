@@ -1,0 +1,12 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Cross-Origin-Resource-Policy: same-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), display-capture=(self)
+
+/*.html
+  Cache-Control: no-store
+
+/assets/*
+  Cache-Control: public, max-age=86400

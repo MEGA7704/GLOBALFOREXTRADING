@@ -1,0 +1,2664 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Forex Capture Analyzer Pro — Cloud Edition</title>
+<style>
+  :root{
+    --bg1:#0b1020; --bg2:#0d2b2b; --bg3:#1a0f2e;
+    --ink: rgba(255,255,255,.92);
+    --muted: rgba(255,255,255,.68);
+    --stroke: rgba(255,255,255,.12);
+    --shadow: 0 22px 60px rgba(0,0,0,.45);
+    --radius: 18px;
+    --ok: #2fe38c; --warn:#ffcc66; --bad:#ff5b6e; --info:#88a7ff;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Arial,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 700px at 16% 10%, var(--bg3) 0%, transparent 60%),
+      radial-gradient(1200px 700px at 92% 18%, var(--bg2) 0%, transparent 60%),
+      linear-gradient(160deg, var(--bg1), #070a14);
+    overflow-x:hidden;
+  }
+
+  .wrap{ width:min(2000px, calc(100vw - 28px)); margin:14px auto 18px; }
+
+  /* Top banner */
+  .topbar{
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(10px);
+    background: linear-gradient(180deg, rgba(8,10,20,.88), rgba(8,10,20,.56));
+    border:1px solid rgba(255,255,255,.10);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    overflow:hidden;
+  }
+  .topbar .bd{ padding:12px 12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .brand{display:flex; gap:12px; align-items:center; flex: 1 1 auto; min-width: 220px;}
+  .logo{
+    width:46px;height:46px;border-radius:16px;
+    border:1px solid var(--stroke);
+    background: linear-gradient(135deg, rgba(47,227,140,.22), rgba(255,204,102,.16), rgba(136,167,255,.18));
+    box-shadow:var(--shadow);
+    flex:0 0 auto;
+  }
+  .title h1{margin:0;font-size:16px}
+  .title .sub{margin-top:3px;font-size:12.5px;color:var(--muted);line-height:1.35}
+
+  .bannerBtns{ display:flex; gap:10px; flex-wrap:wrap; align-items:stretch; flex: 0 0 auto; }
+  .bbtn{
+    flex:0 0 auto;
+    border:1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.08);
+    color:var(--ink);
+    padding:12px 12px;
+    border-radius:14px;
+    cursor:pointer;
+    font-weight:1000;
+    font-size:13px;
+    user-select:none;
+    transition: transform .06s ease, background .2s ease;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    min-height:46px;
+    min-width: 220px;
+  }
+  .bbtn.compact{min-width: 180px; padding-left:14px; padding-right:14px;}
+
+  .bbtn:hover{background: rgba(255,255,255,.12)}
+  .bbtn:active{transform: translateY(1px)}
+  .bbtn.primary{ background: rgba(136,167,255,.12); border-color: rgba(136,167,255,.30); }
+  .bbtn.warn{ background: rgba(255,204,102,.10); border-color: rgba(255,204,102,.25); }
+  .tag{
+    font-size:11px; font-weight:1000; color:rgba(255,255,255,.78);
+    border:1px solid rgba(255,255,255,.12);
+    background: rgba(0,0,0,.18);
+    padding:6px 8px; border-radius:999px;
+    white-space:nowrap;
+  }
+  .mono{font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+
+  /* Cards & buttons */
+  .card{
+    border:1px solid var(--stroke);
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow:hidden;
+    min-width:0;
+  }
+  .btn{
+    border:1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.08);
+    color:var(--ink);
+    padding:10px 12px;
+    border-radius:12px;
+    cursor:pointer;
+    font-weight:1000;
+    font-size:13px;
+    user-select:none;
+    transition: transform .06s ease, background .2s ease;
+    white-space:nowrap;
+  }
+  .btn:hover{background: rgba(255,255,255,.12)}
+  .btn:active{transform: translateY(1px)}
+  .btn.ok{background: rgba(47,227,140,.18); border-color: rgba(47,227,140,.35)}
+  .btn.bad{background: rgba(255,91,110,.14); border-color: rgba(255,91,110,.35)}
+  .btn.small{padding:9px 10px; font-size:12px}
+  .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+  .note{font-size:12.5px; color:var(--muted); line-height:1.45}
+
+  select, input[type="number"], input[type="url"]{
+    padding:9px 10px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.12);
+    background: rgba(15,24,51,.62);
+    color: rgba(255,255,255,.92);
+    outline:none;
+    font-weight:900;
+  }
+  input[type="url"]{flex:1 1 260px; min-width:240px}
+
+  /* Visual zone */
+  .visualCard{ margin-top:12px; }
+  .visualTop{
+    padding:12px 12px;
+    display:flex; gap:10px; align-items:flex-start; justify-content:space-between;
+    flex-wrap:wrap;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    background: linear-gradient(180deg, rgba(8,10,20,.55), rgba(8,10,20,.20));
+  }
+  .visualTop .left{ min-width: 260px; flex: 1 1 auto; }
+  .visualTop .right{ flex: 0 0 auto; }
+  .canvasWrap{
+    position:relative;
+    height: calc(100vh - 220px);
+    min-height: 520px;
+    padding:12px;
+  }
+  @media(max-width:1100px){
+    .canvasWrap{ height: 72vh; min-height: 420px; }
+    .bbtn{ min-width: 180px; }
+  }
+  canvas{
+    width:100%; height:100%;
+    display:block;
+    background: rgba(10,14,30,.65);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,.10);
+  }
+  .overlayInfo{
+    position:absolute; left:24px; top:24px;
+    background: rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius: 14px;
+    padding:10px;
+    backdrop-filter: blur(8px);
+    max-width: min(1200px, calc(100% - 48px));
+    font-size:12.5px;
+    color: rgba(255,255,255,.9);
+    line-height:1.35;
+    pointer-events:none;
+  }
+  .overlayInfo b{color: rgba(255,204,102,.95)}
+
+  #fileInput{
+    position:absolute !important; left:-9999px !important; top:auto !important;
+    width:1px !important; height:1px !important; opacity:0 !important; pointer-events:none !important;
+  }
+
+  /* Modal */
+  .modalBack{
+    position:fixed; inset:0;
+    background: rgba(0,0,0,.55);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:2000;
+    padding:16px;
+  }
+  .modalBack.show{display:flex}
+  .modal{
+    width:min(1100px, 100%);
+    border:1px solid rgba(255,255,255,.14);
+    background: rgba(11,16,32,.92);
+    border-radius:18px;
+    box-shadow: var(--shadow);
+    overflow:hidden;
+  }
+  .modalHead{
+    padding:12px 14px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    border-bottom:1px solid rgba(255,255,255,.10);
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  }
+  .modalTitle{font-weight:1000}
+  .modalBody{padding:14px}
+  .xbtn{
+    border:1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.08);
+    color:var(--ink);
+    border-radius:12px;
+    padding:8px 10px;
+    cursor:pointer;
+    font-weight:1000;
+  }
+  .toggles{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+  .toggle{
+    border:1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.06);
+    padding:8px 10px;
+    border-radius:12px;
+    font-size:12px;
+    font-weight:1000;
+    cursor:pointer;
+    user-select:none;
+  }
+  .toggle.on{outline:2px solid rgba(136,167,255,.35)}
+
+  .grid{
+    display:grid; grid-template-columns: repeat(4, minmax(160px, 1fr));
+    gap:10px;
+  }
+  @media(max-width:980px){ .grid{grid-template-columns: repeat(2, minmax(160px, 1fr));} }
+  .kv{
+    border:1px solid rgba(255,255,255,.10);
+    background: rgba(0,0,0,.14);
+    border-radius:14px;
+    padding:10px 12px;
+    min-height:54px;
+  }
+  .kv span{display:block; font-size:11px; color:var(--muted)}
+  .kv b{display:block; font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; font-size:12.5px; margin-top:4px}
+
+  .liveBadge{
+    display:inline-flex; align-items:center; gap:8px;
+    border:1px solid rgba(255,255,255,.14);
+    background: rgba(0,0,0,.18);
+    padding:7px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:1000;
+  }
+  .dotLive{width:10px;height:10px;border-radius:999px;background:rgba(255,204,102,.95)}
+  .dotLive.on{ background: rgba(47,227,140,.95); animation: pulseLive 1.1s infinite; }
+  @keyframes pulseLive{ 0%,100%{ box-shadow:0 0 0 rgba(47,227,140,0);} 50%{ box-shadow:0 0 18px rgba(47,227,140,.75);} }
+
+  /* Inline overlay toggles (Trendline / Zones / Limit / TP / Bands) */
+  .togglesInline{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .tbtn{
+    border:1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.07);
+    color: rgba(255,255,255,.92);
+    padding:7px 10px;
+    border-radius: 999px;
+    cursor:pointer;
+    font-weight:1000;
+    font-size:12px;
+    user-select:none;
+    transition: transform .06s ease, background .2s ease;
+  }
+  .tbtn:hover{ background: rgba(255,255,255,.11); }
+  .tbtn:active{ transform: translateY(1px); }
+  .tbtn.on{
+    outline: 2px solid rgba(136,167,255,.35);
+    background: rgba(136,167,255,.12);
+    border-color: rgba(136,167,255,.30);
+  }
+
+
+  /* Guide popup content */
+  .guideWrap{ max-height: min(70vh, 720px); overflow:auto; padding-right:6px; }
+  .guideWrap h2{ margin: 14px 0 8px; font-size: 16px; }
+  .guideWrap h3{ margin: 12px 0 6px; font-size: 14px; }
+  .guideWrap p, .guideWrap li{ font-size: 13px; color: rgba(255,255,255,.86); line-height: 1.55; }
+  .guideWrap ul, .guideWrap ol{ margin: 8px 0 10px 18px; }
+  .hr{ height:1px; background: rgba(255,255,255,.10); margin: 12px 0; }
+  .callout{
+    border:1px solid rgba(255,255,255,.12);
+    background: rgba(0,0,0,.16);
+    border-radius:14px;
+    padding:10px 12px;
+    margin: 10px 0;
+  }
+  .imgPh{
+    border:1px dashed rgba(255,255,255,.22);
+    border-radius:14px;
+    padding:12px;
+    margin:10px 0;
+    color: rgba(255,255,255,.70);
+    font-size:12.5px;
+  }
+
+
+  /* License status pill */
+  .chip{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 10px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.06);
+    color: rgba(255,255,255,.90);
+    font-weight: 800;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .chip.bad{ border-color: rgba(255,120,120,.35); background: rgba(255,120,120,.10); }
+  .chip.ok{ border-color: rgba(120,255,180,.25); background: rgba(120,255,180,.08); }
+
+  /* Activation overlay (mandatory) */
+  #activationOverlay{
+    position:fixed; inset:0;
+    background:rgba(0,0,0,.86);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:99998; /* below disclaimer overlay (99999) */
+  }
+  #activationOverlay .box{
+    width:min(820px,92%);
+    max-height:86vh;
+    background:#111;
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:18px;
+    padding:18px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  #activationOverlay .scroll{
+    overflow:auto;
+    padding-right:8px;
+    font-size:13px;
+    line-height:1.6;
+  }
+  #activationOverlay .row2{
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+  }
+  #activationKey{
+    flex:1;
+    min-width: 240px;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.18);
+    background: rgba(255,255,255,.06);
+    color: rgba(255,255,255,.92);
+    outline:none;
+    font-weight:800;
+    letter-spacing:.5px;
+    text-transform: uppercase;
+  }
+  #activationMsg{ font-size:12.5px; color: rgba(255,255,255,.78); }
+  .mutedSmall{ font-size:12px; color: rgba(255,255,255,.68); }
+
+
+  /* App locked until disclaimer accepted */
+  body.locked{ overflow:hidden; }
+  body.locked .wrap{
+    pointer-events:none;
+    user-select:none;
+    filter: blur(2px);
+    opacity: .35;
+  }
+  /* Keep disclaimer overlay clickable */
+  body.locked #disclaimerOverlay{
+    pointer-events:auto;
+    user-select:auto;
+  }
+
+</style>
+  <link rel="stylesheet" href="/assets/cloud-shell.css"/>
+</head>
+<body>
+
+<header class="cloud-shell" id="cloudShell">
+  <div class="cloud-shell__brand">
+    <div class="cloud-shell__logo" aria-hidden="true">FX</div>
+    <div>
+      <strong>FOREX CAPTURE ANALYZER PRO</strong>
+      <span>Cloud Edition · KV + D1</span>
+    </div>
+  </div>
+  <button class="cloud-shell__toggle" id="cloudMenuToggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
+  <nav class="cloud-shell__nav" id="cloudMenu" aria-label="Navigation principale">
+    <button type="button" data-cloud-action="home">Accueil</button>
+    <button type="button" data-cloud-action="upload">Téléverser</button>
+    <button type="button" data-cloud-action="analyze">Analyser</button>
+    <button type="button" data-cloud-action="live">LIVE</button>
+    <button type="button" data-cloud-action="results">Résultats</button>
+    <button type="button" data-cloud-action="history">Historique</button>
+    <button type="button" data-cloud-action="guide">Guide</button>
+    <button type="button" data-cloud-action="admin" hidden>Super Admin</button>
+  </nav>
+  <div class="cloud-shell__account">
+    <span class="cloud-plan-badge free" id="cloudPlanBadge">PLAN</span>
+    <span class="cloud-sync" id="cloudSyncStatus"><i></i> Cloud prêt</span>
+    <button type="button" class="cloud-user" id="cloudUserButton" aria-haspopup="menu" aria-expanded="false">
+      <span class="cloud-avatar" id="cloudAvatar">U</span>
+      <span class="cloud-user__copy"><b id="cloudUserName">Utilisateur</b><small id="cloudUserRole">Compte sécurisé</small></span>
+      <span aria-hidden="true">⌄</span>
+    </button>
+    <div class="cloud-user-menu" id="cloudUserMenu" role="menu">
+      <button type="button" data-cloud-action="save">Enregistrer le résultat</button>
+      <button type="button" data-cloud-action="status">État du système</button>
+      <button type="button" data-cloud-action="password">Changer mon mot de passe</button>
+      <button type="button" data-cloud-action="support">Support WhatsApp</button>
+      <hr/>
+      <button type="button" class="danger" data-cloud-action="logout">Déconnexion</button>
+    </div>
+  </div>
+</header>
+<div class="cloud-shell-spacer" aria-hidden="true"></div>
+
+
+<div class="wrap">
+  <!-- TOP BANNER (menu-like) -->
+  <section class="topbar">
+    <div class="bd">
+      <div class="brand">
+        <div class="logo"></div>
+        <div class="title">
+          <h1><span style="color:yellow;">Forex Capture Analyzer Pro</span></h1>
+          
+        </div>
+      </div>
+
+      
+      <div class="bannerBtns">
+        <button class="bbtn primary" id="btnOpenLive">
+          <span>LIVE + Réglage bougies</span>
+          <span class="tag" id="liveTag">LIVE: OFF</span>
+        </button>
+
+        <button class="bbtn warn" id="btnOpenResults">
+          <span>Résultats</span>
+          <span class="tag mono" id="miniConclusion">—</span>
+        </button>
+
+        <button class="bbtn" id="btnOpenGuide">
+          <span>Guide</span>
+          <span class="tag">Aide</span>
+        </button>
+</div>
+
+    </div>
+  </section>
+
+  <!-- VISUAL ZONE + CONTROLE -->
+  <section class="card visualCard">
+    <input id="fileInput" type="file" accept=".png,.jpg,.jpeg,.webp" />
+    <div class="visualTop">
+      <div class="left">
+        <div class="note"><b>Contrôle — Upload / LIVE / Analyse</b></div>
+        <div class="note" id="statusLine">Dépose une capture sur le canvas, ou clique “Téléverser”, puis “Analyser”.</div>
+      </div>
+      <div class="right row">
+        <button class="btn ok" id="btnPick">Téléverser</button>
+        <button class="btn ok" id="btnAnalyze">Analyser</button>
+        <button class="btn" id="btnFit">Ajuster</button>
+        <button class="btn bad" id="btnReset">Reset</button>
+      
+        <div class="togglesInline" id="overlayToggles" title="Afficher / masquer les overlays">
+          <button class="tbtn on" data-tg="trend">Trendline</button>
+          <button class="tbtn on" data-tg="zones">Zones</button>
+          <button class="tbtn on" data-tg="limit">Limit</button>
+          <button class="tbtn on" data-tg="tp">TP</button>
+          <button class="tbtn on" data-tg="bands">Bands</button>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="canvasWrap" id="wrapCanvas">
+      <canvas id="cv"></canvas>
+      <div class="overlayInfo">
+        <b>LIMIT</b> (sortie si défavorable) + <b>TP</b> (take profit) sont des <b>zones visuelles</b> (proxy), pas des prix exacts.
+      </div>
+    </div>
+  
+    <div style="border-top:1px solid rgba(255,255,255,.08); padding:14px; text-align:center;">
+        <button class="btn small" onclick="openModal('CONDITIONS GÉNÉRALES D’UTILISATION (CGU)','tpl_cgu')">CONDITIONS GÉNÉRALES D’UTILISATION (CGU)</button>
+        <button class="btn small" onclick="openModal('POLITIQUE DE CONFIDENTIALITÉ','tpl_privacy')">POLITIQUE DE CONFIDENTIALITÉ</button>
+        <button class="btn small" onclick="openModal('CONDITIONS GÉNÉRALES DE VENTE (CGV)','tpl_cgv')">CONDITIONS GÉNÉRALES DE VENTE (CGV)</button>
+        <button class="btn small" onclick="openModal('MENTIONS LÉGALES','tpl_mentions')">MENTIONS LÉGALES</button>
+    </div>
+
+</section>
+</div>
+
+<!-- MODAL -->
+<div class="modalBack" id="modalBack" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modalHead">
+      <div class="modalTitle" id="modalTitle">—</div>
+      <div class="row">
+        <button class="xbtn" id="btnClose">Fermer</button>
+      </div>
+    </div>
+    <div class="modalBody" id="modalBody"><div id="licenseStatus" class="chip" title="Statut de licence">Expire dans…</div>
+</div>
+  </div>
+</div>
+
+<!-- Templates -->
+<template id="tpl_live">
+  <div class="row" style="justify-content:space-between">
+    <div class="note"><b>LIVE + Réglage bougies</b></div>
+    <span class="liveBadge"><span class="dotLive" id="dotLive"></span><span id="liveStatus">LIVE: OFF</span></span>
+  </div>
+
+  <div class="row" style="margin-top:10px">
+    <input id="tradeUrl" type="url" placeholder="Lien graphique (TradingView/MT5 Web) : https://..." spellcheck="false" />
+    <button class="btn small" id="btnOpenTrade">Ouvrir</button>
+  </div>
+
+  <div class="row" style="margin-top:10px">
+    <button class="btn small ok" id="btnLiveStart">Connecter LIVE</button>
+    <button class="btn small bad" id="btnLiveStop">Arrêter LIVE</button>
+  </div>
+
+  <div class="row" style="margin-top:12px">
+    <div style="flex:1 1 160px">
+      <div class="note" style="margin:0 0 6px"><b>Timeframe</b></div>
+      <select id="tfSelect" style="width:100%">
+        <option value="AUTO" selected>AUTO</option>
+        <option value="D1">D1</option>
+        <option value="H4">H4</option>
+        <option value="H1">H1</option>
+        <option value="M15">M15</option>
+      </select>
+    </div>
+
+    <div style="flex:1 1 170px">
+      <div class="note" style="margin:0 0 6px"><b>Bougies visibles</b></div>
+      <input id="candlesVisible" type="number" min="30" step="10" value="300" style="width:100%"/>
+    </div>
+
+    <div style="flex:1 1 170px">
+      <div class="note" style="margin:0 0 6px"><b>Bougies nécessaires</b></div>
+      <div class="kv" style="min-height:auto">
+        <span>Minimum</span>
+        <b id="candlesNeed">—</b>
+      </div>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:10px">
+    Règles PRO : <b>GO</b> seulement si <b>Score ≥ 70</b>. Si <b>Risque ≥ 60</b> ou Trend = <b>RANGE</b> → <b>ATTENTE</b>.
+  </div>
+</template>
+
+<template id="tpl_results">
+  <div class="row" style="justify-content:space-between">
+    <div class="note"><b>Résultats</b></div>
+    <div class="note mono">v17</div>
+  </div>
+
+  <div class="grid" style="margin-top:10px">
+    <div class="kv"><span>Décision</span><b id="r_decision">—</b></div>
+    <div class="kv"><span>Trend</span><b id="r_trend">—</b></div>
+    <div class="kv"><span>Confiance</span><b id="r_conf">—</b></div>
+    <div class="kv"><span>Bruit</span><b id="r_noise">—</b></div>
+
+    <div class="kv"><span>R:R (proxy)</span><b id="r_rr">—</b></div>
+    <div class="kv"><span>Risque (0–100)</span><b id="r_risk">—</b></div>
+    <div class="kv"><span>Score (0–100)</span><b id="r_score">—</b></div>
+    <div class="kv"><span>Timeframe</span><b id="r_tf">—</b></div>
+
+    <div class="kv" style="grid-column: span 2"><span>Niveau d'entrée</span><b id="r_entryMode">—</b></div>
+    <div class="kv" style="grid-column: span 2"><span>Zone recommandée</span><b id="r_zoneRec">—</b></div>
+
+    <div class="kv"><span>Pullback</span><b id="r_pb">—</b></div>
+    <div class="kv"><span>Zone pullback</span><b id="r_pbZone">—</b></div>
+    <div class="kv"><span>Structure</span><b id="r_structure">—</b></div>
+    <div class="kv"><span>Cassure</span><b id="r_brk">—</b></div>
+    <div class="kv"><span>Retest</span><b id="r_retest">—</b></div>
+    <div class="kv"><span>Confirmation PB</span><b id="r_pbConf">—</b></div>
+    <div class="kv" style="grid-column: span 4"><span>Zone (Demand/Supply)</span><b id="r_dsZone">—</b></div>
+  </div>
+
+  <div class="note" id="r_reason" style="margin-top:10px">Téléverse puis clique <b>Analyser</b>.</div>
+
+  <div class="kv" style="margin-top:10px">
+    <span>Conclusion (copiable)</span>
+    <b id="r_conclusion">—</b>
+  </div>
+</template>
+
+<script>
+/* =========================
+  v17 Single-file
+  - Top banner: only LIVE + Résultats (popups)
+  - Below: visual zone (canvas) + control buttons (Téléverser / Analyser / Ajuster / Reset)
+========================= */
+
+const $ = (id)=>document.getElementById(id);
+
+/* ---------- Modal ---------- */
+const modalBack = $("modalBack");
+const modalTitle = $("modalTitle");
+const modalBody = $("modalBody");
+
+function closeModal(){
+  modalBack.classList.remove("show");
+  modalBack.setAttribute("aria-hidden","true");
+  modalTitle.textContent="—";
+  modalBody.innerHTML="";
+}
+$("btnClose").addEventListener("click", closeModal);
+modalBack.addEventListener("click", (e)=>{ if(e.target===modalBack) closeModal(); });
+document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeModal(); });
+
+function openModal(title, templateId){
+  const tpl = document.getElementById(templateId);
+  if(!tpl) return;
+  modalTitle.textContent = title;
+  modalBody.innerHTML="";
+  modalBody.appendChild(tpl.content.cloneNode(true));
+  modalBack.classList.add("show");
+  modalBack.setAttribute("aria-hidden","false");
+  wireModal(templateId);
+  if(templateId==="tpl_results") renderResultsToModal();
+  if(templateId==="tpl_live") refreshLiveBadge();
+}
+$("btnOpenLive").addEventListener("click", ()=> openModal("LIVE + Réglage bougies", "tpl_live"));
+$("btnOpenResults").addEventListener("click", ()=> openModal("Résultats", "tpl_results"));
+
+/* ---------- Guide popup + WhatsApp support ---------- */
+const SUPPORT_WA = "+2250777041790";
+function waLink(text){
+  const msg = encodeURIComponent(text || "Bonjour, j’ai besoin d’aide sur Forex Capture Analyzer PRO.");
+  const phone = SUPPORT_WA.replace(/[^\d]/g,"");
+  return "https://wa.me/" + phone + "?text=" + msg;
+}
+const btnGuide = document.getElementById("btnOpenGuide");
+if(btnGuide){
+  btnGuide.addEventListener("click", ()=> openModal("Guide d’utilisation", "tpl_guide"));
+}
+
+
+/* Hook: when Guide modal is open, set WhatsApp link */
+(function hookGuideWhatsApp(){
+  const _openModal = openModal;
+  window.openModal = function(title, templateId){
+    _openModal(title, templateId);
+    if(templateId==="tpl_guide"){
+      const b = document.getElementById("btnWhatsAppSupport");
+      if(b){
+        b.href = waLink("Bonjour Support, je veux de l’aide sur Forex Capture Analyzer PRO (v19).");
+      }
+    }
+  }
+})();
+
+
+/* ---------- Upload ---------- */
+const fileInput = $("fileInput");
+$("btnPick").addEventListener("click", ()=> fileInput.click());
+fileInput.addEventListener("change", async (e)=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  if(!f.type || !f.type.startsWith("image/")){
+    alert("Veuillez choisir une image (PNG/JPG/WEBP).");
+    return;
+  }
+  stopLive();
+  await loadFile(f);
+  try{ fileInput.value=""; }catch(_){}
+});
+
+/* Drag & drop */
+document.body.addEventListener("dragover",(e)=>{ e.preventDefault(); });
+document.body.addEventListener("drop", async (e)=>{
+  e.preventDefault();
+  const f = e.dataTransfer.files && e.dataTransfer.files[0];
+  if(!f) return;
+  if(!f.type || !f.type.startsWith("image/")){
+    alert("Veuillez choisir une image (PNG/JPG/WEBP).");
+    return;
+  }
+  stopLive();
+  await loadFile(f);
+});
+
+/* ---------- Canvas ---------- */
+const wrap = $("wrapCanvas");
+const cv = $("cv");
+const ctx = cv.getContext("2d");
+let dpr = window.devicePixelRatio || 1;
+
+let IMG = new Image();
+let HAS_IMG = false;
+
+let LAST = null;      // overlays data
+let LAST_RES = null;  // results data for modal + mini tag
+
+let overlays = { trend:true, zones:true, limit:true, tp:true, bands:true };
+
+/* ---------- Overlay toggles (inline) ---------- */
+function syncToggleUI(){
+  const wrapT = document.getElementById("overlayToggles");
+  if(!wrapT) return;
+  wrapT.querySelectorAll("[data-tg]").forEach(btn=>{
+    const k = btn.getAttribute("data-tg");
+    btn.classList.toggle("on", !!overlays[k]);
+  });
+}
+(function wireOverlayToggles(){
+  const wrapT = document.getElementById("overlayToggles");
+  if(!wrapT) return;
+  wrapT.querySelectorAll("[data-tg]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const k = btn.getAttribute("data-tg");
+      if(!k || !(k in overlays)) return;
+      overlays[k] = !overlays[k];
+      btn.classList.toggle("on", !!overlays[k]);
+      draw();
+    });
+  });
+  syncToggleUI();
+})();
+
+
+function resizeCanvas(){
+  const inner = wrap.querySelector(".canvasWrap") || wrap;
+  const W = inner.clientWidth;
+  const H = inner.clientHeight;
+  dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(W*dpr);
+  cv.height = Math.round(H*dpr);
+  cv.style.width = W+"px";
+  cv.style.height = H+"px";
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  draw();
+}
+window.addEventListener("resize", resizeCanvas);
+$("btnFit").addEventListener("click", resizeCanvas);
+
+function drawGrid(W,H){
+  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  ctx.strokeStyle="rgba(255,255,255,.06)";
+  ctx.lineWidth=1;
+  for(let i=0;i<=6;i++){
+    const y=(H/6)*i; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  }
+  for(let i=0;i<=10;i++){
+    const x=(W/10)*i; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function computeFit(imgW, imgH, W, H){
+  const sc = Math.min(W/imgW, H/imgH);
+  return { scale: sc, x: (W - imgW*sc)/2, y: (H - imgH*sc)/2 };
+}
+function imgToCanvas(ix, iy, fit){
+  return { x: fit.x + ix*fit.scale, y: fit.y + iy*fit.scale };
+}
+const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+
+function drawBands(bands, fit){
+  if(!bands) return;
+  ctx.save();
+  ctx.strokeStyle="rgba(136,167,255,.35)";
+  ctx.lineWidth=2;
+  for(const b of bands){
+    const x=fit.x + b.x*fit.scale;
+    const y=fit.y + b.y*fit.scale;
+    const w=b.w*fit.scale;
+    const h=b.h*fit.scale;
+    ctx.strokeRect(x,y,w,h);
+  }
+  ctx.restore();
+}
+function drawTrendLine(model, fit){
+  const {m,b,startX,endX,trend} = model;
+  const x1=startX, x2=endX;
+  const y1=m*x1+b, y2=m*x2+b;
+  const p1=imgToCanvas(x1,y1,fit), p2=imgToCanvas(x2,y2,fit);
+  ctx.save();
+  ctx.lineWidth=3;
+  ctx.strokeStyle="rgba(136,167,255,.90)";
+  ctx.setLineDash([10,7]);
+  ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle="rgba(136,167,255,.95)";
+  ctx.font="12px system-ui";
+  ctx.fillText("TRENDLINE ("+trend+")", Math.max(10,p2.x-170), Math.max(16,p2.y-10));
+  ctx.restore();
+}
+function drawEntry(entry, fit){
+  const p=imgToCanvas(entry.ix, entry.iy, fit);
+  let color="rgba(255,204,102,.95)", label="ENTRY";
+  if(entry.decision==="ACHAT"){ color="rgba(47,227,140,.95)"; label="ENTRY ACHAT"; }
+  if(entry.decision==="VENTE"){ color="rgba(255,91,110,.95)"; label="ENTRY VENTE"; }
+  ctx.save();
+  ctx.fillStyle=color;
+  ctx.strokeStyle="rgba(0,0,0,.45)";
+  ctx.lineWidth=2;
+  ctx.globalAlpha=0.25;
+  ctx.beginPath(); ctx.arc(p.x,p.y,18,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha=1;
+  ctx.beginPath(); ctx.arc(p.x,p.y,7,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle=color; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(p.x+10,p.y); ctx.lineTo(p.x+42,p.y); ctx.stroke();
+  ctx.fillStyle="rgba(255,255,255,.92)";
+  ctx.font="13px system-ui";
+  ctx.fillText(label, p.x+10, p.y-12);
+  ctx.restore();
+}
+function drawZones(model, entry, fit){
+  if(model && model.dsZones){
+    const {W,top,bottom,decision} = model;
+    const leftX = Math.floor(W*0.10);
+    const rightX = Math.floor(W*0.90);
+    const bandW = rightX-leftX;
+    const dz = model.dsZones.demand;
+    const sz = model.dsZones.supply;
+    const thickMin = 10;
+    ctx.save(); ctx.lineWidth = 2;
+    function drawBand(zone, label, stroke, fill){
+      if(!zone) return;
+      const y0 = clamp(Math.min(zone.y0, zone.y1), top, bottom);
+      const y1 = clamp(Math.max(zone.y0, zone.y1), top, bottom);
+      const h = Math.max(thickMin, (y1-y0));
+      const p = imgToCanvas(leftX, y0, fit);
+      ctx.strokeStyle = stroke;
+      ctx.fillStyle = fill;
+      ctx.beginPath(); ctx.rect(p.x, p.y, bandW*fit.scale, h*fit.scale);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = stroke.replace(".78",".95").replace(".80",".95");
+      ctx.font = "12px system-ui";
+      ctx.fillText(label, p.x+10, p.y+16);
+    }
+    drawBand(sz, "SUPPLY (OFFRE)", "rgba(255,91,110,.80)", "rgba(255,91,110,.10)");
+    drawBand(dz, "DEMAND (DEMANDE)", "rgba(47,227,140,.80)", "rgba(47,227,140,.10)");
+    const rec = model.dsRec || ((decision==="ACHAT") ? "DEMAND" : (decision==="VENTE") ? "SUPPLY" : "—");
+    const recZone = (rec==="DEMAND") ? dz : (rec==="SUPPLY") ? sz : null;
+    if(recZone){
+      const y0 = clamp(Math.min(recZone.y0, recZone.y1), top, bottom);
+      const y1 = clamp(Math.max(recZone.y0, recZone.y1), top, bottom);
+      const h = Math.max(thickMin, (y1-y0));
+      const p = imgToCanvas(leftX, y0, fit);
+      ctx.strokeStyle = "rgba(136,167,255,.95)";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(p.x+1, p.y+1, bandW*fit.scale-2, h*fit.scale-2);
+      ctx.fillStyle = "rgba(136,167,255,.95)";
+      ctx.font = "12px system-ui";
+      ctx.fillText("ZONE RECOMMANDÉE", p.x+10, p.y + h*fit.scale - 10);
+      ctx.lineWidth = 2;
+    }
+    if(model.dsZones.breakLevelY!=null){
+      const y = clamp(model.dsZones.breakLevelY, top, bottom);
+      const p1 = imgToCanvas(leftX, y, fit);
+      const p2 = imgToCanvas(rightX, y, fit);
+      ctx.strokeStyle="rgba(255,204,102,.95)";
+      ctx.setLineDash([8,6]);
+      ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle="rgba(255,204,102,.95)";
+      ctx.fillText("NIVEAU CASSURE (proxy)", p1.x+10, p1.y-8);
+    }
+    ctx.restore();
+  }
+}
+function drawLimit(model, entry, fit){
+  const {W,top,bottom,decision} = model;
+  if(!(decision==="VENTE" || decision==="ACHAT")) return;
+  const range = Math.max(1,(bottom-top));
+  const slOffset = clamp(Math.floor(range*0.10), 18, Math.floor(range*0.26));
+  const limitY = (decision==="VENTE")
+    ? clamp(entry.iy - slOffset, top, bottom)
+    : clamp(entry.iy + slOffset, top, bottom);
+  const leftX = Math.floor(W*0.10);
+  const rightX = Math.floor(W*0.90);
+  const p1 = imgToCanvas(leftX, limitY, fit);
+  const p2 = imgToCanvas(rightX, limitY, fit);
+  ctx.save();
+  ctx.lineWidth=3;
+  ctx.strokeStyle="rgba(255,204,102,.95)";
+  ctx.setLineDash([6,6]);
+  ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle="rgba(255,204,102,.95)";
+  ctx.font="12px system-ui";
+  ctx.fillText("LIMIT (proxy)", p1.x+10, p1.y-8);
+  ctx.restore();
+  return {limitY, slOffset};
+}
+function drawTakeProfit(model, entry, fit, limitInfo){
+  const {W,top,bottom,decision} = model;
+  if(!(decision==="VENTE" || decision==="ACHAT")) return;
+  const range = Math.max(1,(bottom-top));
+  const slOffset = limitInfo?.slOffset ?? clamp(Math.floor(range*0.10), 18, Math.floor(range*0.26));
+  const tpOffset = Math.max(24, Math.floor(slOffset * 1.7));
+  const tpY = (decision==="VENTE")
+    ? clamp(entry.iy + tpOffset, top, bottom)
+    : clamp(entry.iy - tpOffset, top, bottom);
+  const leftX = Math.floor(W*0.10);
+  const rightX = Math.floor(W*0.90);
+  const p1 = imgToCanvas(leftX, tpY, fit);
+  const p2 = imgToCanvas(rightX, tpY, fit);
+  ctx.save();
+  ctx.lineWidth=3;
+  ctx.strokeStyle="rgba(47,227,140,.95)";
+  ctx.setLineDash([14,8]);
+  ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle="rgba(47,227,140,.95)";
+  ctx.font="12px system-ui";
+  ctx.fillText("TAKE PROFIT (TP) raisonnable", p1.x+10, p1.y-8);
+  ctx.restore();
+  return {tpY, tpOffset};
+}
+
+let BLINK_TICK = null;
+let blinkOn = true;
+
+function draw(){
+  const inner = wrap.querySelector(".canvasWrap") || wrap;
+  const W = inner.clientWidth;
+  const H = inner.clientHeight;
+  drawGrid(W,H);
+
+  if(!HAS_IMG && !LIVE_ACTIVE){
+    ctx.save();
+    ctx.fillStyle="rgba(255,255,255,.70)";
+    ctx.font="14px system-ui";
+    ctx.fillText("Dépose une capture ici, ou clique Téléverser, puis clique Analyser.", 18, 28);
+    ctx.restore();
+    return;
+  }
+
+  const srcW = LIVE_ACTIVE ? (LIVE_VIDEO.videoWidth||IMG.width) : IMG.width;
+  const srcH = LIVE_ACTIVE ? (LIVE_VIDEO.videoHeight||IMG.height) : IMG.height;
+  const fit = computeFit(srcW, srcH, W, H);
+
+  if(LIVE_ACTIVE){
+    ctx.drawImage(LIVE_VIDEO, fit.x, fit.y, srcW*fit.scale, srcH*fit.scale);
+  }else{
+    ctx.drawImage(IMG, fit.x, fit.y, IMG.width*fit.scale, IMG.height*fit.scale);
+  }
+
+  if(!LAST) return;
+
+  const flashActive = (LAST && (LAST.model.decision==="ACHAT" || LAST.model.decision==="VENTE"));
+  const flashAlpha = (!flashActive) ? 1 : (blinkOn ? 1 : 0.35);
+
+  ctx.save();
+  ctx.globalAlpha = flashAlpha;
+
+  if(overlays.bands) drawBands(LAST.bands, fit);
+  if(overlays.trend) drawTrendLine(LAST.model, fit);
+  if(overlays.zones) drawZones(LAST.model, LAST.entry, fit);
+
+  let limitInfo=null;
+  if(overlays.limit) limitInfo = drawLimit(LAST.model, LAST.entry, fit);
+  if(overlays.tp) drawTakeProfit(LAST.model, LAST.entry, fit, limitInfo);
+
+  drawEntry(LAST.entry, fit);
+
+  ctx.restore();
+}
+
+/* ---------- Image loading ---------- */
+function loadFile(file){
+  return new Promise((resolve, reject)=>{
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = ()=>{
+      try{ URL.revokeObjectURL(url); }catch(_){}
+      IMG = img;
+      HAS_IMG = true;
+      LAST = null;
+      setStatus("Image chargée. Clique “Analyser”.");
+      resizeCanvas();
+      resolve();
+    };
+    img.onerror = ()=>{
+      try{ URL.revokeObjectURL(url); }catch(_){}
+      alert("Impossible de charger l'image.");
+      reject(new Error("load image failed"));
+    };
+    img.src = url;
+  });
+}
+
+/* ---------- Analysis logic (same as v16) ---------- */
+function luminance(r,g,b){ return 0.2126*r + 0.7152*g + 0.0722*b; }
+
+const TF_CANDLES_NEED = { D1: 100, H4: 150, H1: 200, M15: 250 };
+let liveSettings = { tfSelect:"AUTO", candlesVisible:300 };
+
+function getWantedTF(tfDetect){
+  const sel = (liveSettings.tfSelect || "AUTO");
+  if(sel && sel !== "AUTO") return sel;
+  if(tfDetect && TF_CANDLES_NEED[tfDetect]) return tfDetect;
+  return "H4";
+}
+function getCandlesNeed(tf){ return TF_CANDLES_NEED[tf] || 150; }
+function getCandlesVisible(){
+  const v = parseInt(String(liveSettings.candlesVisible || 300), 10);
+  return clamp(isNaN(v)?300:v, 30, 5000);
+}
+function refreshCandleNeed(tfDetect){
+  const tf = getWantedTF(tfDetect);
+  const need = getCandlesNeed(tf);
+  const el = modalBody.querySelector("#candlesNeed");
+  if(el) el.textContent = String(need);
+  return {tf, need};
+}
+
+function analyzeSource(source, srcW, srcH){
+  const off = document.createElement("canvas");
+  off.width = srcW; off.height = srcH;
+  const octx = off.getContext("2d", {willReadFrequently:true});
+  octx.drawImage(source, 0, 0, off.width, off.height);
+  const imgData = octx.getImageData(0,0,off.width,off.height);
+  const W = off.width, H = off.height, px = imgData.data;
+
+  function detectTF(){
+    const candidates = ["M1","M5","M15","H1","H4","D1"];
+    const area = {x: Math.floor(W*0.02), y: Math.floor(H*0.02), w: Math.floor(W*0.26), h: Math.floor(H*0.14)};
+    const sW = 220, sH = 90;
+    const tmp = document.createElement("canvas"); tmp.width=sW; tmp.height=sH;
+    const tctx = tmp.getContext("2d", {willReadFrequently:true});
+    tctx.drawImage(off, area.x, area.y, area.w, area.h, 0,0,sW,sH);
+    const region = tctx.getImageData(0,0,sW,sH).data;
+
+    const t2 = document.createElement("canvas"); t2.width=sW; t2.height=sH;
+    const c2 = t2.getContext("2d", {willReadFrequently:true});
+
+    function scoreFor(text){
+      let best=-1;
+      const sizes=[18,20,22,24];
+      for(const fs of sizes){
+        c2.clearRect(0,0,sW,sH);
+        c2.fillStyle="black"; c2.fillRect(0,0,sW,sH);
+        c2.fillStyle="white";
+        c2.font="900 "+fs+"px system-ui, Segoe UI, Roboto, Arial";
+        c2.textBaseline="top";
+        c2.fillText(text, 10, 10);
+        const templ = c2.getImageData(0,0,sW,sH).data;
+
+        let same=0, tot=0;
+        for(let i=0;i<region.length;i+=4){
+          const lum = 0.2126*region[i] + 0.7152*region[i+1] + 0.0722*region[i+2];
+          const v = lum>180 ? 1 : 0;
+          const tl = 0.2126*templ[i] + 0.7152*templ[i+1] + 0.0722*templ[i+2];
+          const tv = tl>180 ? 1 : 0;
+          if(v===0 && tv===0) continue;
+          tot++;
+          if(v===tv) same++;
+        }
+        if(tot<120) continue;
+        const s = same/tot;
+        if(s>best) best=s;
+      }
+      return best;
+    }
+
+    let bestTF="—", bestScore=0.0;
+    for(const c of candidates){
+      const s = scoreFor(c);
+      if(s>bestScore){ bestScore=s; bestTF=c; }
+    }
+    if(bestScore < 0.62) return "—";
+    return bestTF;
+  }
+  const tfDetect = detectTF();
+
+  const top = Math.floor(H*0.12);
+  const bottom = Math.floor(H*0.88);
+  const startX = Math.floor(W*0.18);
+  const endX   = Math.floor(W*0.82);
+
+  const bandsCount = 24;
+  const bandWidth = Math.max(6, Math.floor(W*0.008));
+
+  const points=[];
+  const bands=[];
+  for(let i=0;i<bandsCount;i++){
+    const x = Math.floor(startX + (endX-startX)*(i/(bandsCount-1)));
+    const x0 = Math.max(0, x - Math.floor(bandWidth/2));
+    const x1 = Math.min(W-1, x0 + bandWidth);
+
+    let bestY=null, bestScore=-1;
+    for(let y=top+1;y<bottom-1;y++){
+      let s0=0,s1=0,s2=0;
+      for(let xx=x0;xx<x1;xx++){
+        const i0=((y-1)*W+xx)*4;
+        const i1=(y*W+xx)*4;
+        const i2=((y+1)*W+xx)*4;
+        s0 += luminance(px[i0],px[i0+1],px[i0+2]);
+        s1 += luminance(px[i1],px[i1+1],px[i1+2]);
+        s2 += luminance(px[i2],px[i2+1],px[i2+2]);
+      }
+      const n=(x1-x0)||1;
+      const a0=s0/n, a1=s1/n, a2=s2/n;
+      const score = Math.abs(a1-a0) + Math.abs(a2-a1);
+      if(score>bestScore){ bestScore=score; bestY=y; }
+    }
+    if(bestY!==null){
+      points.push({x,y:bestY,score:bestScore});
+      bands.push({x:x0,y:top,w:(x1-x0),h:(bottom-top)});
+    }
+  }
+
+  if(points.length<10){
+    return {status:"FAIL", bands, W,H,top,bottom,startX,endX, tfDetect:"—"};
+  }
+
+  // Weighted linear regression y = m x + b
+  let sw=0,sx=0,sy=0,sxx=0,sxy=0;
+  for(const p of points){
+    const w=Math.max(1,p.score);
+    sw+=w; sx+=w*p.x; sy+=w*p.y; sxx+=w*p.x*p.x; sxy+=w*p.x*p.y;
+  }
+  const denom=(sw*sxx - sx*sx);
+  const m = denom!==0 ? (sw*sxy - sx*sy)/denom : 0;
+  const b = (sy - m*sx)/sw;
+
+  const slopeNorm = m*(W/Math.max(1,(bottom-top)));
+  let trend="RANGE";
+  if(slopeNorm < -0.06) trend="UP";
+  else if(slopeNorm > 0.06) trend="DOWN";
+
+  let err=0;
+  for(const p of points){
+    const yh=m*p.x+b;
+    err += Math.abs(p.y - yh);
+  }
+  const avgErr = err/points.length;
+  const conf = clamp(1 - (avgErr / (Math.max(1,(bottom-top))*0.35)), 0, 1);
+  const noise = clamp(avgErr / (Math.max(1,(bottom-top))*0.35), 0, 1);
+
+  const entryX = Math.min(W-1, Math.floor(endX*0.98));
+  let entryY = clamp(m*entryX + b, top, bottom);
+
+  return {status:"OK", W,H,top,bottom,startX,endX, m,b, trend, conf, noise, tfDetect, bands, points, entry:{x:entryX,y:entryY}};
+}
+
+function runDecision(out){
+  const isRange = (out.trend==="RANGE");
+  const risk = clamp(Math.round(100*(0.55*out.noise + 0.35*(1-out.conf) + (isRange?0.20:0.0))), 0, 100);
+
+  const rangeH = Math.max(1,(out.bottom-out.top));
+  const slopeNorm = out.m*(out.W/Math.max(1,rangeH));
+  const slopeMag = clamp(Math.abs(slopeNorm)/0.18, 0, 1);
+
+  const trendScore = isRange ? 6 : Math.round(25*(0.55 + 0.45*slopeMag));
+  const structureScore = Math.round(25*clamp(out.conf,0,1));
+
+  const entryY = out.entry.y;
+  const lineY = out.m*out.entry.x + out.b;
+  const dist = Math.abs(entryY - lineY) / rangeH;
+  const rejScore = Math.round(20*clamp(1 - (dist/0.22), 0, 1));
+
+  const readScore = Math.round(15*clamp(1 - out.noise, 0, 1));
+  const riskScore = Math.round(15*clamp(1 - (risk/100), 0, 1));
+  const score = clamp(trendScore + structureScore + rejScore + readScore + riskScore, 0, 100);
+
+  const wanted = refreshCandleNeed(out.tfDetect);
+  const candlesVisible = getCandlesVisible();
+  const candlesNeed = wanted.need;
+  const candlesOK = candlesVisible >= candlesNeed;
+  const scoreAdj = candlesOK ? score : Math.max(0, Math.round(score * 0.55));
+
+  let decision="ATTENTE";
+  if(out.trend==="UP" && out.conf>=0.45) decision="ACHAT";
+  if(out.trend==="DOWN" && out.conf>=0.45) decision="VENTE";
+
+  let zoneRec = "REJET";
+  if(dist > 0.18) zoneRec = "EXTREME";
+  else if(slopeMag > 0.72 && out.conf >= 0.55) zoneRec = "RETEST";
+  else zoneRec = "REJET";
+
+  let entryMode = "—";
+  const confPct = Math.round(out.conf*100);
+
+  if(risk >= 60 || out.trend==="RANGE"){
+    decision = "ATTENTE";
+    entryMode = "ATTENTE";
+  }else{
+    if(scoreAdj < 70){
+      decision = "ATTENTE";
+      entryMode = "ATTENTE (Score<70)";
+    }else{
+      if(confPct >= 80 && risk <= 35) entryMode = "ENTRÉE IMMÉDIATE";
+      else if(confPct >= 65 && confPct <= 79 && risk <= 59) entryMode = "ENTRÉE STANDARD";
+      else if(confPct >= 55 && confPct <= 64 && risk <= 59) entryMode = "ENTRÉE SÉCURISÉE";
+      else entryMode = "ENTRÉE STANDARD";
+    }
+  }
+
+  const slOffset = clamp(Math.floor(rangeH*0.10), 18, Math.floor(rangeH*0.26));
+  const tpOffset = Math.max(24, Math.floor(slOffset*1.7));
+  const rr = tpOffset / Math.max(1, slOffset);
+
+  if(out.noise >= 0.70){
+    decision="ATTENTE";
+    entryMode="ATTENTE (Bruit élevé)";
+  }
+
+  // Pullback + break/retest + DS (proxy)
+  const ptsRaw = (out.points || []).slice().sort((a,b)=>a.x-b.x);
+  const pts = ptsRaw.length ? ptsRaw : [{x:out.entry.x, y:out.entry.y}];
+  const cur = pts[pts.length-1];
+  const N = Math.min(8, pts.length);
+  let lm=0;
+  if(N>=3){
+    let sw2=0,sx2=0,sy2=0,sxx2=0,sxy2=0;
+    for(let i=pts.length-N;i<pts.length;i++){
+      const p=pts[i]; const w=1;
+      sw2+=w; sx2+=w*p.x; sy2+=w*p.y; sxx2+=w*p.x*p.x; sxy2+=w*p.x*p.y;
+    }
+    const den=(sw2*sxx2 - sx2*sx2);
+    lm = den!==0 ? (sw2*sxy2 - sx2*sy2)/den : 0;
+  }
+  const pullback = (out.trend==="UP") ? (lm>0.02) : (out.trend==="DOWN") ? (lm<-0.02) : false;
+
+  let pbZone = "—";
+  if(pullback){
+    if(dist < 0.08) pbZone = "PULLBACK 1";
+    else if(dist < 0.14) pbZone = "PULLBACK 2";
+    else pbZone = "PULLBACK 3";
+  }
+
+  const swingsH=[], swingsL=[];
+  for(let i=1;i<pts.length-1;i++){
+    const a=pts[i-1].y, b=pts[i].y, c=pts[i+1].y;
+    if(b < a && b < c) swingsH.push(pts[i]);
+    if(b > a && b > c) swingsL.push(pts[i]);
+  }
+  const lastHigh = swingsH.length ? swingsH[swingsH.length-1] : null;
+  const lastLow  = swingsL.length ? swingsL[swingsL.length-1] : null;
+
+  const thr = Math.max(10, Math.floor(rangeH*0.035));
+  let cassure=false, retest=false, structure="—";
+  let breakLevelY = null;
+
+  if(out.trend==="UP" && lastHigh){
+    breakLevelY = lastHigh.y;
+    cassure = (cur.y < lastHigh.y - thr);
+    if(cassure){
+      const recent = pts.slice(-Math.min(6, pts.length));
+      const tol = Math.max(10, Math.floor(rangeH*0.020));
+      retest = recent.some(p=> Math.abs(p.y - lastHigh.y) <= tol );
+    }
+  }
+  if(out.trend==="DOWN" && lastLow){
+    breakLevelY = lastLow.y;
+    cassure = (cur.y > lastLow.y + thr);
+    if(cassure){
+      const recent = pts.slice(-Math.min(6, pts.length));
+      const tol = Math.max(10, Math.floor(rangeH*0.020));
+      retest = recent.some(p=> Math.abs(p.y - lastLow.y) <= tol );
+    }
+  }
+  const confirmPB = !!(pullback && cassure && retest);
+  if(out.trend==="UP" || out.trend==="DOWN"){
+    structure = confirmPB ? "OK" : (pullback ? "PULLBACK" : "—");
+  }
+
+  const thick = Math.max(12, Math.floor(rangeH*0.030));
+  let demand=null, supply=null;
+  if(lastLow) demand = {y0:lastLow.y - thick, y1:lastLow.y + thick};
+  if(lastHigh) supply = {y0:lastHigh.y - thick, y1:lastHigh.y + thick};
+
+  let dsRec = (decision==="ACHAT") ? "DEMAND" : (decision==="VENTE") ? "SUPPLY" : (out.trend==="UP") ? "DEMAND" : (out.trend==="DOWN") ? "SUPPLY" : "—";
+  let dsLabel = "—";
+  if(demand && supply) dsLabel = "DEMAND = support | SUPPLY = résistance";
+  else if(demand) dsLabel = "DEMAND = support";
+  else if(supply) dsLabel = "SUPPLY = résistance";
+  const dsZone = (dsRec ? (dsRec + " — " + dsLabel) : dsLabel);
+
+  const conclusionText =
+    decision + ". " + entryMode +
+    " | Zone=" + zoneRec +
+    " | Score=" + scoreAdj + "/100" +
+    " | Risque=" + risk + "/100";
+
+  const why=[];
+  if(out.trend==="RANGE") why.push("Marché latéral (RANGE)");
+  if(out.noise>=0.70) why.push("Bruit élevé");
+  if(out.conf<0.45) why.push("Confiance faible");
+  if(decision!=="ATTENTE") why.push("Aligné avec la tendance");
+
+  const reason = (decision==="ATTENTE")
+    ? ("Conclusion : ATTENTE. " + (why.length?("Raison(s) : "+why.join(" • ")):"Filtrage strict.") +
+       (candlesOK===false ? (" | Bougies insuff.: "+candlesVisible+"/"+candlesNeed) : "") +
+       " | Score="+scoreAdj+"/100 | Risque="+risk+"/100")
+    : ("Conclusion : "+decision+". "+entryMode+" | Zone="+zoneRec+" | Score="+scoreAdj+"/100 | Risque="+risk+"/100");
+
+  return {decision, risk, score:scoreAdj, rr, zoneRec, entryMode, pullback, pbZone, structure, cassure, retest, confirmPB, dsRec, dsZone, breakLevelY, demand, supply, tfWanted:wanted.tf, conclusionText, reason, conf: out.conf, noise: out.noise, trend: out.trend, tfDetect: out.tfDetect||"—"};
+}
+
+function runAnalyze(){
+  if(!HAS_IMG && !LIVE_ACTIVE){
+    alert("Aucune capture chargée.");
+    return;
+  }
+  const source = LIVE_ACTIVE ? LIVE_VIDEO : IMG;
+  const w = LIVE_ACTIVE ? (LIVE_VIDEO.videoWidth||0) : IMG.width;
+  const h = LIVE_ACTIVE ? (LIVE_VIDEO.videoHeight||0) : IMG.height;
+  if(w<20 || h<20){
+    alert("Lecture insuffisante. Agrandis le graphique.");
+    return;
+  }
+  const out = analyzeSource(source, w, h);
+  if(out.status!=="OK"){
+    LAST = null;
+    draw();
+    setStatus("Lecture insuffisante. Refaire une capture plus nette.");
+    applyResultsUI({
+      conclusionText:"ATTENTE. ATTENTE | Zone=— | Score=—/100 | Risque=—/100",
+      reason:"Lecture insuffisante. Refaire une capture plus nette."
+    });
+    return;
+  }
+  const meta = runDecision(out);
+  applyOverlay(out, meta);
+  applyResultsUI(meta);
+  window.__FOREX_LAST_RESULT = meta;
+  window.CloudApp?.saveAnalysis?.(meta, { sourceType: LIVE_ACTIVE ? "live" : "capture", automatic: true });
+  setStatus(meta.reason);
+}
+
+/* ---------- Apply overlays & results ---------- */
+function applyOverlay(out, meta){
+  LAST = {
+    bands: out.bands,
+    model: {...out, decision: meta.decision, zoneRec: meta.zoneRec, dsRec: meta.dsRec, dsZones: {demand: meta.demand, supply: meta.supply, breakLevelY: meta.breakLevelY}},
+    entry: {ix: out.entry.x, iy: out.entry.y, decision: meta.decision}
+  };
+  draw();
+
+  if(!BLINK_TICK){
+    BLINK_TICK = setInterval(()=>{ blinkOn = !blinkOn; }, 380);
+  }
+}
+function fmtPct(x){ return Math.round(x*100) + "%"; }
+function mono(n, dec=2){ return Number(n).toFixed(dec); }
+
+function applyResultsUI(meta){
+  LAST_RES = meta || LAST_RES;
+  window.__FOREX_LAST_RESULT = LAST_RES;
+
+  const c = (meta && meta.conclusionText) ? meta.conclusionText : "—";
+  $("miniConclusion").textContent = c.length>34 ? c.slice(0,34)+"…" : c;
+
+  // If results modal open, update
+  renderResultsToModal();
+}
+function renderResultsToModal(){
+  if(!modalBack.classList.contains("show")) return;
+  if(modalTitle.textContent.indexOf("Résultats") === -1) return;
+
+  const r = LAST_RES;
+  if(!r) return;
+
+  const map = {
+    r_decision: r.decision,
+    r_trend: r.trend,
+    r_conf: (r.conf!=null ? fmtPct(r.conf) : "—"),
+    r_noise:(r.noise!=null? fmtPct(r.noise): "—"),
+    r_rr: (r.rr!=null ? mono(r.rr,2)+" (proxy)" : "—"),
+    r_risk: (r.risk!=null ? String(r.risk): "—"),
+    r_score:(r.score!=null ? String(r.score): "—"),
+    r_tf: (r.tfDetect || "—") + (r.tfWanted ? (" | Choisi: "+r.tfWanted) : ""),
+    r_entryMode: r.entryMode || "—",
+    r_zoneRec: r.zoneRec || "—",
+    r_pb: (r.pullback==null? "—" : (r.pullback ? "OUI":"NON")),
+    r_pbZone: r.pbZone || "—",
+    r_structure: r.structure || "—",
+    r_brk: (r.cassure==null? "—" : (r.cassure ? "OUI":"NON")),
+    r_retest: (r.retest==null? "—" : (r.retest ? "OUI":"NON")),
+    r_pbConf: (r.confirmPB==null? "—" : (r.confirmPB ? "OUI":"NON")),
+    r_dsZone: r.dsZone || "—",
+    r_reason: r.reason || "—",
+    r_conclusion: r.conclusionText || "—",
+  };
+  for(const k in map){
+    const el = $(k);
+    if(el) el.textContent = map[k];
+  }
+}
+
+/* ---------- Status line ---------- */
+function setStatus(text){
+  $("statusLine").textContent = text || "";
+}
+
+/* ---------- Reset ---------- */
+$("btnReset").addEventListener("click", ()=>{
+  if(!confirm("Reset : effacer capture + résultats ?")) return;
+  stopLive();
+  IMG = new Image();
+  HAS_IMG = false;
+  LAST = null;
+  LAST_RES = null;
+  $("miniConclusion").textContent = "—";
+  setStatus("Reset effectué.");
+  draw();
+});
+
+/* ---------- Analyze button ---------- */
+$("btnAnalyze").addEventListener("click", runAnalyze);
+
+/* ---------- LIVE (screen capture) ---------- */
+let LIVE_ACTIVE = false;
+let LIVE_STREAM = null;
+let LIVE_VIDEO = document.createElement("video");
+LIVE_VIDEO.playsInline=true;
+LIVE_VIDEO.muted=true;
+
+function setLiveUI(on){
+  $("liveTag").textContent = on ? "LIVE: ON" : "LIVE: OFF";
+  const dot = modalBody.querySelector("#dotLive");
+  const st = modalBody.querySelector("#liveStatus");
+  if(dot) dot.classList.toggle("on", on);
+  if(st) st.textContent = on ? "LIVE: ON" : "LIVE: OFF";
+}
+async function startLive(){
+  try{
+    LIVE_STREAM = await navigator.mediaDevices.getDisplayMedia({
+      video: { frameRate: 10, width: {ideal: 1920}, height: {ideal: 1080} },
+      audio: false
+    });
+    LIVE_VIDEO.srcObject = LIVE_STREAM;
+    await LIVE_VIDEO.play();
+    LIVE_ACTIVE = true;
+    HAS_IMG = true;
+    setLiveUI(true);
+    setStatus("LIVE actif : le canvas affiche le partage d'écran. Clique Analyser (ou laisse tourner).");
+    resizeCanvas();
+
+    // auto analyze interval
+    if(window.__LIVE_TICK) clearInterval(window.__LIVE_TICK);
+    window.__LIVE_TICK = setInterval(()=>{
+      if(!LIVE_ACTIVE) return;
+      const w = LIVE_VIDEO.videoWidth||0, h = LIVE_VIDEO.videoHeight||0;
+      if(w<20 || h<20) return;
+      const out = analyzeSource(LIVE_VIDEO, w, h);
+      if(out.status!=="OK"){
+        LAST=null; draw();
+        applyResultsUI({conclusionText:"ATTENTE. LIVE lecture insuffisante | Zone=— | Score=—/100 | Risque=—/100", reason:"LIVE : lecture insuffisante. Agrandis le graphique et garde assez de bougies."});
+        return;
+      }
+      const meta = runDecision(out);
+      applyOverlay(out, meta);
+      applyResultsUI(meta);
+    }, 900);
+
+    const tracks = LIVE_STREAM.getVideoTracks();
+    if(tracks && tracks[0]){
+      tracks[0].onended = ()=> stopLive();
+    }
+  }catch(err){
+    setLiveUI(false);
+    alert("LIVE refusé ou non disponible. Utilise l'upload.\nDétail: " + (err?.message||err));
+  }
+}
+function stopLive(){
+  LIVE_ACTIVE = false;
+  setLiveUI(false);
+  if(window.__LIVE_TICK){ clearInterval(window.__LIVE_TICK); window.__LIVE_TICK=null; }
+  if(LIVE_STREAM){
+    LIVE_STREAM.getTracks().forEach(t=>t.stop());
+    LIVE_STREAM=null;
+  }
+  draw();
+}
+
+/* ---------- Modal wiring ---------- */
+function refreshLiveBadge(){ setLiveUI(LIVE_ACTIVE); }
+
+function wireModal(templateId){
+  if(templateId==="tpl_live"){
+    const tf = modalBody.querySelector("#tfSelect");
+    const cv = modalBody.querySelector("#candlesVisible");
+    if(tf) tf.value = liveSettings.tfSelect || "AUTO";
+    if(cv) cv.value = String(liveSettings.candlesVisible || 300);
+
+    const btnOpenTrade = modalBody.querySelector("#btnOpenTrade");
+    const btnStart = modalBody.querySelector("#btnLiveStart");
+    const btnStop = modalBody.querySelector("#btnLiveStop");
+
+    const applySettings = ()=>{
+      liveSettings.tfSelect = tf ? tf.value : "AUTO";
+      liveSettings.candlesVisible = parseInt(cv ? cv.value : "300", 10) || 300;
+      // update candle need display
+      refreshCandleNeed(LAST ? (LAST.model.tfDetect||"—") : "—");
+    };
+
+    if(tf) tf.addEventListener("change", applySettings);
+    if(cv) cv.addEventListener("change", applySettings);
+
+    if(btnOpenTrade){
+      btnOpenTrade.addEventListener("click", ()=>{
+        const url = (modalBody.querySelector("#tradeUrl")?.value || "").trim();
+        if(!url){ alert("Colle d'abord le lien du site/graphique."); return; }
+        if(!/^https?:\/\//i.test(url)){
+          alert("Lien invalide. Mets un lien qui commence par http:// ou https://");
+          return;
+        }
+        window.open(url, "_blank", "noopener,noreferrer");
+      });
+    }
+    if(btnStart) btnStart.addEventListener("click", ()=>{ applySettings(); startLive(); refreshLiveBadge(); });
+    if(btnStop) btnStop.addEventListener("click", ()=>{ stopLive(); refreshLiveBadge(); });
+
+    applySettings();
+    refreshLiveBadge();
+  }
+}
+
+/* Init */
+resizeCanvas();
+draw();
+
+/* ================= DISCLAIMER CONTROL (GATED) ================= */
+function showDisclaimerGate(){
+  const overlay = document.getElementById("disclaimerOverlay");
+  const btn = document.getElementById("acceptDisclaimer");
+  if(!overlay || !btn) return;
+
+  const accepted = sessionStorage.getItem("disclaimerAccepted")==="yes";
+  if(accepted){
+    overlay.style.display="none";
+    document.body.classList.remove("locked");
+    return;
+  }
+
+  // Lock the app until acceptance
+  document.body.classList.add("locked");
+  overlay.style.display="flex";
+
+  if(!btn.dataset.bound){
+    btn.dataset.bound="1";
+    btn.addEventListener("click", function(){
+      sessionStorage.setItem("disclaimerAccepted","yes");
+      overlay.style.display="none";
+      document.body.classList.remove("locked");
+    });
+  }
+}
+
+document.addEventListener("DOMContentLoaded", showDisclaimerGate);
+
+
+
+</script>
+
+
+
+<template id="tpl_guide">
+  <div style="max-height:75vh; overflow:auto; font-size:13px; line-height:1.6; white-space:pre-wrap;">
+Guide d’utilisation
+Forex Capture Analyzer PRO
+________________________________________
+1️⃣ PRESENTATION DU LOGICIEL
+Forex Capture Analyzer PRO est un outil d’analyse visuelle Forex basé sur :
+•	📷 Une capture d’écran d’un graphique (TradingView, MT5, etc.)
+•	🖥️ Un mode LIVE (partage d’écran)
+•	📊 Une lecture automatique de la structure du marché
+Il permet d’obtenir :
+•	✅ Décision : ACHAT / VENTE / ATTENTE
+•	📈 Tendance : UP / DOWN / RANGE
+•	🎯 Score global (0–100)
+•	⚠️ Niveau de risque
+•	📊 Ratio R:R (Risk/Reward)
+•	🔎 Détection Pullback
+•	🧱 Cassure & Retest
+•	🟢 Zones Demand / 🔴 Supply
+•	📍 Zone recommandée
+________________________________________
+2️⃣ INTERFACE GENERALE
+L’interface est composée de 3 zones principales :
+🔝 1. Bannière supérieure
+•	LIVE + Réglage bougies
+•	Résultats
+•	Guide
+🖼 2. Zone visuelle (Canvas)
+•	Affiche votre capture
+•	Affiche les overlays (trendline, zones, TP, limit…)
+🎛 3. Zone de contrôle
+•	Téléverser
+•	Analyser
+•	Ajuster
+•	Reset
+________________________________________
+3️⃣ METHODE 1 : ANALYSE PAR CAPTURE D’ECRAN
+📷 ÉTAPE 1 — FAIRE UNE CAPTURE PROPRE ET EXPLOITABLE
+Cette étape est cruciale.
+La qualité de votre analyse dépend directement de la qualité de votre capture.
+________________________________________
+✅ 1. Ouvrez votre graphique
+•	Lancez votre plateforme (TradingView, MT5, etc.)
+•	Sélectionnez la paire souhaitée (ex : EURUSD, XAUUSD…)
+•	Choisissez votre timeframe (H1, H4, D1…)
+🎯 Le graphique doit occuper tout l’écran si possible.
+
+✅ 2. Affichez suffisamment de bougies (Très important)
+Le logiciel analyse la structure sur plusieurs bougies.
+📌 Recommandations :
+•	M15 → minimum 250 bougies visibles
+•	H1 → minimum 200 bougies
+•	H4 → minimum 150 bougies
+•	D1 → minimum 100 bougies
+👉 Si vous affichez trop peu de bougies :
+•	Le score sera réduit
+•	La lecture sera moins fiable
+•	Le logiciel peut indiquer ATTENTE
+💡 Astuce : Dézoomez légèrement pour afficher plus d’historique.
+
+✅ 3. Capturez l’écran correctement
+Vous pouvez :
+•	Utiliser l’outil Capture Windows
+•	Faire une capture TradingView
+•	Exporter l’image
+📌 Format recommandé :
+PNG ou JPG
+
+🎯 Conseils essentiels pour une analyse précise
+🚫 Évitez les indicateurs inutiles
+Supprimez :
+•	RSI
+•	MACD
+•	Moyennes mobiles
+•	Stochastique
+•	Autres indicateurs visuels
+Pourquoi ?
+Le logiciel lit la structure des prix, pas les indicateurs.
+
+📊 Graphique clair
+•	Fond sombre ou clair, peu importe
+•	Mais contraste net entre bougies et fond
+•	Pas d’objets dessinés partout
+
+🕯 Bougies bien visibles
+Les bougies doivent être :
+✔️ Assez larges
+✔️ Bien espacées
+✔️ Pas compressées
+Évitez :
+•	Graphique trop zoomé
+•	Bougies trop fines
+•	Graphique écrasé verticalement
+
+⚠️ Erreurs fréquentes à éviter
+❌ Capture partielle (moitié du graphique)
+❌ Barre de menu couvrant les bougies
+❌ Graphique flou
+❌ Trop d’objets dessinés
+❌ Capture d’un marché en range serré
+
+📌 Règle d’or
+Plus votre capture est propre,
+plus le Score et la Décision seront fiables.
+________________________________________
+📤 ÉTAPE 2 — TELEVERSER VOTRE CAPTURE
+Après avoir réalisé une capture propre, vous devez l’importer dans Forex Capture Analyzer PRO.
+________________________________________
+✅ 1. Cliquez sur “Téléverser”
+Dans la zone de contrôle (sous la bannière supérieure), cliquez sur :
+👉 Téléverser
+Un explorateur de fichiers s’ouvre automatiquement.
+
+✅ 2. Sélectionnez votre image
+Choisissez le fichier de votre capture :
+Formats acceptés :
+•	PNG (recommandé ✅)
+•	JPG / JPEG
+•	WEBP
+📌 Conseil :
+Le format PNG conserve mieux la qualité des bougies.
+
+✅ 3. Validation automatique
+Une fois l’image sélectionnée :
+✔️ Elle s’affiche immédiatement dans la zone visuelle (canvas)
+✔️ Le message “Image chargée” apparaît
+✔️ Le bouton Analyser devient prêt à être utilisé
+
+🖼 Ce que vous devez voir
+•	Le graphique occupe la zone centrale
+•	Les bougies sont visibles
+•	Aucun flou
+•	Aucun décalage
+Si l’image ne s’affiche pas :
+•	Vérifiez le format
+•	Vérifiez que le fichier n’est pas corrompu
+•	Essayez une nouvelle capture
+
+⚠️ Erreurs fréquentes
+❌ Sélectionner un PDF au lieu d’une image
+❌ Image trop compressée
+❌ Capture incomplète
+❌ Mauvais fichier sélectionné
+
+🎯 Astuce PRO
+Après téléversement :
+👉 Cliquez sur Ajuster si le graphique semble mal centré.
+Cela adapte automatiquement l’image à la zone d’analyse.
+
+🔄 Alternative : Glisser-Déposer
+Vous pouvez aussi :
+•	Glisser l’image directement sur la zone visuelle
+•	La déposer
+•	Elle sera automatiquement chargée
+
+________________________________________
+🔎 ÉTAPE 3 — ANALYSER
+Une fois votre capture téléversée, vous devez lancer l’analyse.
+✅ Cliquez sur : Analyser
+Le traitement démarre immédiatement.
+Le logiciel lit votre graphique et applique son moteur d’analyse structurelle.
+
+⚙️ Que fait exactement le logiciel ?
+Voici ce qui se passe en arrière-plan 👇
+
+1️⃣ Détection de la structure du marché
+Le logiciel :
+•	Analyse les sommets et creux
+•	Identifie la direction dominante
+•	Détermine si le marché est :
+o	📈 UP (haussier)
+o	📉 DOWN (baissier)
+o	↔ RANGE (latéral)
+🎯 Objectif : comprendre le contexte global avant toute décision.
+
+2️⃣ Calcul de la pente (Trendline automatique)
+Une ligne de tendance invisible est calculée mathématiquement.
+Elle permet de :
+•	Mesurer l’inclinaison du marché
+•	Évaluer la force de la tendance
+•	Détecter une accélération ou un affaiblissement
+Plus la pente est claire, plus la lecture est fiable.
+
+3️⃣ Mesure du bruit du marché
+Le logiciel calcule :
+•	L’irrégularité des bougies
+•	Les mouvements contradictoires
+•	Les micro-variations inutiles
+📊 Résultat :
+•	Bruit faible → marché lisible
+•	Bruit élevé → marché instable
+Si le bruit est trop élevé, la décision sera souvent ATTENTE.
+
+4️⃣ Calcul du Score global (0–100)
+Le score est basé sur :
+•	La force de la tendance
+•	La qualité de la structure
+•	Le niveau de bruit
+•	Le risque estimé
+•	La position actuelle du prix
+🎯 Interprétation :
+•	≥ 70 → Configuration exploitable
+•	60–69 → Prudence
+•	< 60 → Éviter
+
+5️⃣ Génération de la décision finale
+Le logiciel applique ses filtres PRO :
+Décision possible :
+🟢 ACHAT
+🔴 VENTE
+⚪ ATTENTE
+Règles automatiques :
+•	Si Score < 70 → ATTENTE
+•	Si Risque ≥ 60 → ATTENTE
+•	Si Trend = RANGE → ATTENTE
+•	Si Bruit élevé → ATTENTE
+👉 Le système préfère filtrer que forcer un trade.
+________________________________________
+📊 4.RESULTAT VISUEL APRES ANALYSE
+Après avoir cliqué sur Analyser, plusieurs éléments apparaissent automatiquement sur le graphique.
+
+🔵 1. Trendline (ligne de tendance)
+🎯 Rôle :
+•	Indique la direction dominante du marché
+•	Permet d’identifier si le marché est UP ou DOWN
+•	Sert de base à l’évaluation du score
+
+🟢 2. Zone Demand (zone d’achat)
+🎯 Rôle :
+•	Zone où les acheteurs sont forts
+•	Support potentiel
+•	Favorable aux décisions ACHAT
+
+🔴 3. Zone Supply (zone de vente)
+🎯 Rôle :
+•	Zone où les vendeurs dominent
+•	Résistance potentielle
+•	Favorable aux décisions VENTE
+
+🟡 4. LIMIT (Stop visuel)
+🎯 Rôle :
+•	Niveau où le scénario est invalidé
+•	Permet de visualiser le risque
+•	Sert au calcul du R:R
+⚠️ C’est une zone proxy (visuelle), pas un prix exact.
+
+🟢 5. TP (Take Profit)
+🎯 Rôle :
+•	Objectif raisonnable basé sur la structure
+•	Utilisé pour calculer le ratio R:R
+•	Indique le potentiel de gain
+
+📍 6. Point d’entrée
+🎯 Rôle :
+•	Position théorique d’entrée
+•	Basée sur la structure détectée
+•	Alignée avec la tendance dominante
+
+🧠 Compréhension globale
+Après analyse, le graphique devient :
+✔️ Structuré
+✔️ Annoté automatiquement
+✔️ Orienté décision
+Vous voyez visuellement :
+•	Où entrer
+•	Où sortir si erreur
+•	Où viser
+•	Pourquoi le logiciel donne cette décision
+Le logiciel :
+1.	Comprend le marché
+2.	Mesure sa qualité
+3.	Évalue le risque
+4.	Donne un score
+5.	Propose une décision claire
+
+🧠 Important
+Forex Capture Analyzer PRO :
+✔️ N’invente pas le marché
+✔️ Lit la structure réelle
+✔️ Applique un filtrage mathématique
+Mais :
+⚠️ Il ne remplace pas votre gestion du risque.
+________________________________________
+5. COMPRENDRE LES RESULTATS
+Cliquez sur Résultats dans la bannière.
+Vous verrez :
+
+📌 Décision
+•	🟢 ACHAT → tendance haussière confirmée
+•	🔴 VENTE → tendance baissière confirmée
+•	⚪ ATTENTE → conditions non favorables
+
+📈 Trend
+•	UP → Marché haussier
+•	DOWN → Marché baissier
+•	RANGE → Marché latéral (danger)
+
+🎯 Score (0–100)
+•	≥ 70 → Configuration exploitable
+•	60–69 → Prudence
+•	< 60 → Éviter
+
+⚠️ Risque (0–100)
+•	< 35 → Faible risque
+•	35–59 → Risque modéré
+•	≥ 60 → Éviter
+
+📊 R:R (Risk/Reward)
+Ratio entre TP et LIMIT (Stop)
+Exemple :
+•	1.70 = pour 1 risque, potentiel 1.70 gain
+
+📈 6.QU’EST-CE QU’UN PULLBACK ?
+Le Pullback indique si le marché effectue un retracement temporaire avant de continuer dans la direction principale.
+Un pullback est :
+•	Un retour du prix vers une zone clé
+•	Une correction temporaire
+•	Une respiration du marché
+Il ne s’agit pas d’un retournement, mais d’un retracement dans la tendance dominante.
+
+📊 Exemple en tendance haussière (UP)
+🔵 Situation :
+1.	Le marché monte
+2.	Il redescend légèrement
+3.	Il repart à la hausse
+👉 Ce retracement est le Pullback.
+
+📉 Exemple en tendance baissière (DOWN)
+🔵 Situation :
+1.	Le marché baisse
+2.	Il remonte légèrement
+3.	Il repart à la baisse
+👉 C’est également un Pullback.
+
+🎯 Pourquoi le Pullback est important ?
+Le logiciel utilise le pullback pour :
+•	Identifier un point d’entrée plus sécurisé
+•	Éviter d’entrer trop tard
+•	Confirmer la continuité de la tendance
+________________________________________
+📌 Indications dans Forex Capture Analyzer PRO
+Dans l’onglet Résultats, vous verrez trois éléments liés au Pullback :
+
+🔎 1️⃣ Pullback : OUI / NON
+🔵 Pullback = OUI
+Le logiciel a détecté :
+•	Un retracement temporaire
+•	Un retour vers une zone clé
+•	Une structure cohérente avec la tendance
+👉 Cela signifie que le marché corrige avant de potentiellement continuer.
+
+⚪ Pullback = NON
+Cela signifie :
+•	Pas de retracement structuré
+•	Mouvement direct sans respiration
+•	Ou marché en range
+Dans ce cas, l’entrée peut être moins optimisée.
+
+📍 2️⃣ Zone Pullback : PULLBACK 1 / 2 / 3
+Le logiciel classe la profondeur du retracement :
+
+🟢 PULLBACK 1 (léger retracement)
+•	Correction faible
+•	Structure très solide
+•	Tendance forte
+👉 Idéal en marché puissant.
+
+🟡 PULLBACK 2 (retracement modéré)
+•	Correction normale
+•	Structure encore valide
+•	Zone d’entrée intéressante
+👉 Configuration souvent exploitable.
+
+🔴 PULLBACK 3 (retracement profond)
+•	Correction importante
+•	Tendance affaiblie
+•	Risque plus élevé
+👉 Prudence requise.
+________________________________________
+✅ 3️⃣ Confirmation PB : OUI / NON
+Le logiciel ne valide un pullback que si :
+✔️ Retracement détecté
+✔️ Cassure d’un niveau clé
+✔️ Retest confirmé
+
+🟢 Confirmation PB = OUI
+Cela signifie :
+•	Structure validée
+•	Pullback + cassure + retest alignés
+•	Configuration plus solide
+
+⚪ Confirmation PB = NON
+Cela signifie :
+•	Retracement détecté
+•	Mais pas encore confirmé
+•	Ou cassure absente
+Dans ce cas → prudence.
+
+🧠 Comment interpréter ces 3 éléments ensemble ?
+Pullback	Confirmation PB	Interprétation
+OUI	OUI	Structure solide, timing optimisé
+OUI	NON	Retracement présent mais fragile
+NON	—	Marché impulsif ou range
+________________________________________
+🎯 Règle pratique
+Le meilleur scénario est :
+•	Score ≥ 70
+•	Risque faible
+•	Pullback = OUI
+•	Confirmation PB = OUI
+C’est la configuration la plus propre.
+
+🟢 Pullback confirmé
+Si le logiciel détecte :
+✔️ Retracement
+✔️ Cassure
+✔️ Retest
+Alors la structure est considérée comme plus solide.
+
+⚠️ Quand le Pullback est dangereux ?
+•	Si le marché est en RANGE
+•	Si le bruit est élevé
+•	Si le retracement est trop profond
+•	Si la structure est cassée
+Dans ces cas → ATTENTE.
+________________________________________
+🧱 Cassure & Retest
+•	Cassure : rupture d’un niveau clé
+•	Retest : retour tester le niveau cassé
+•	Confirmation PB : pullback validé
+________________________________________
+🟢🔴 Zones Demand / Supply
+•	Demand = zone d’achat institutionnelle
+•	Supply = zone de vente institutionnelle
+La zone recommandée est automatiquement mise en évidence.
+________________________________________
+
+7.MODE LIVE (ANALYSE EN TEMPS REEL)
+Cliquez sur :
+👉 LIVE + Réglage bougies
+
+🖥 ÉTAPE 1 — CONNECTER LIVE
+Le mode LIVE permet à Forex Capture Analyzer PRO d’analyser votre graphique en temps réel, sans faire de capture manuelle.
+________________________________________
+✅ Cliquez sur :
+👉 LIVE + Réglage bougies
+Une fenêtre s’ouvre.
+Puis cliquez sur :
+👉 Connecter LIVE
+
+🔐 Autorisation du partage d’écran
+Votre navigateur va afficher une fenêtre demandant l’autorisation.
+Vous devez choisir :
+•	🖥 L’onglet TradingView
+ou
+•	🖥 L’onglet MT5 Web
+Puis cliquez sur Partager.
+
+🎯 Important
+Sélectionnez uniquement :
+✔️ L’onglet du graphique
+❌ Pas tout l’écran (si inutile)
+❌ Pas une autre application
+Le logiciel analysera uniquement ce qui est partagé.
+
+🔄 Que se passe-t-il après connexion ?
+Une fois connecté :
+•	🔴 Le badge LIVE passe en LIVE: ON
+•	📊 Le graphique apparaît dans la zone visuelle
+•	🤖 L’analyse s’actualise automatiquement toutes les secondes
+•	📈 Les résultats évoluent en temps réel
+Vous n’avez plus besoin de téléverser d’image.
+
+⚙️ Analyse en continu
+Le logiciel :
+1.	Lit les nouvelles bougies
+2.	Met à jour la trendline
+3.	Recalcule le score
+4.	Ajuste le risque
+5.	Actualise la décision
+
+⚠️ Bonnes pratiques en mode LIVE
+✔️ Garder le graphique stable
+✔️ Ne pas changer d’onglet sans arrêter LIVE
+✔️ Afficher suffisamment de bougies
+✔️ Éviter les notifications couvrant le graphique
+
+🛑 Pour arrêter le LIVE
+Cliquez sur :
+👉 Arrêter LIVE
+Le partage s’interrompt immédiatement.
+
+🧠 Avantage du mode LIVE
+•	Analyse dynamique
+•	Réactivité accrue
+•	Adapté au scalping et intraday
+•	Surveillance continue du marché
+________________________________________
+⚙️ ÉTAPE 2 — REGLAGE DES BOUGIES (MODE LIVE)
+Après avoir activé le mode LIVE, vous devez configurer correctement les bougies pour garantir une analyse fiable.
+
+🎛 Vous pouvez définir :
+🕒 1️⃣ Timeframe
+Choisissez le timeframe souhaité :
+•	AUTO (détection automatique)
+•	D1
+•	H4
+•	H1
+•	M15
+
+📊 2️⃣ Nombre de bougies visibles
+Vous devez indiquer combien de bougies sont affichées à l’écran.
+👉 Plus il y a de bougies visibles, plus l’analyse est stable.
+
+⚠️ Important : Minimum requis par timeframe
+Chaque timeframe nécessite un minimum de bougies pour que le score soit valide.
+Timeframe	Minimum recommandé
+D1	100 bougies
+H4	150 bougies
+H1	200 bougies
+M15	250 bougies
+
+❗ Que se passe-t-il si le minimum n’est pas respecté ?
+Si vous affichez trop peu de bougies :
+•	🔻 Le score est automatiquement réduit
+•	⚠️ La fiabilité diminue
+•	⚪ La décision peut devenir ATTENTE
+Le logiciel applique un filtrage automatique.
+
+🧠 Pourquoi c’est important ?
+Le moteur d’analyse :
+•	Étudie la structure globale
+•	Analyse les sommets et creux
+•	Calcule la pente sur une base suffisante
+Avec peu de bougies :
+•	La tendance peut être faussée
+•	Le bruit augmente
+•	Le risque devient plus élevé
+
+🎯 Conseil PRO
+Si vous hésitez :
+👉 Laissez le mode AUTO
+👉 Dézoomez légèrement
+👉 Vérifiez que le graphique montre un historique clair
+
+📌 Résumé simple
+•	Plus vous affichez de bougies,
+•	plus le logiciel comprend le marché en profondeur.
+
+________________________________________
+
+8️⃣ BONNES PRATIQUES D’UTILISATION
+✅ Toujours afficher suffisamment de bougies
+✅ Éviter les graphiques compressés
+✅ Éviter les marchés ultra volatils
+✅ Ne pas trader pendant news majeures
+✅ Toujours respecter le Risk Management
+________________________________________
+9️⃣ 🚫 QUAND NE PAS TRADER ?
+L’un des grands avantages de Forex Capture Analyzer PRO est sa capacité à filtrer les mauvaises configurations.
+👉 Le but n’est pas de trader souvent.
+👉 Le but est de trader intelligemment.
+
+❌ 1️⃣ Si Trend = RANGE
+Lorsque le marché est en RANGE :
+•	Pas de direction claire
+•	Mouvements contradictoires
+•	Faux signaux fréquents
+•	Cassures non fiables
+🎯 Dans ce cas, le logiciel privilégie ATTENTE.
+Un marché latéral est le pire environnement pour trader la structure.
+
+❌ 2️⃣ Si Bruit élevé
+Un bruit élevé signifie :
+•	Bougies irrégulières
+•	Mouvements imprévisibles
+•	Volatilité désorganisée
+•	Marché instable
+📉 Le bruit réduit la lisibilité.
+Même si la tendance semble présente, le risque augmente fortement.
+
+❌ 3️⃣ Si Risque ≥ 60
+Un risque élevé indique :
+•	Distance importante entre entrée et invalidation
+•	Structure fragile
+•	Manque de confirmation
+•	Mauvais ratio potentiel
+🎯 Au-dessus de 60, le logiciel considère la configuration comme dangereuse.
+
+❌ 4️⃣ Si Score < 70
+Le score mesure :
+•	Qualité structurelle
+•	Cohérence de la tendance
+•	Niveau de bruit
+•	Ratio risque/rendement
+📊 En dessous de 70 :
+•	La probabilité diminue
+•	Le timing est moins optimal
+•	La structure est moyenne
+Le logiciel préfère filtrer.
+
+🧠 Philosophie du système
+“Mieux vaut rater une opportunité
+que subir une perte évitable.”
+Forex Capture Analyzer PRO est conçu pour :
+✔️ Filtrer
+✔️ Sécuriser
+✔️ Discipliner
+Il préfère :
+•	Moins de trades
+•	Mais de meilleure qualité
+
+🎯 Résumé stratégique
+Ne pas trader est parfois la meilleure décision.
+Le logiciel privilégie :
+•	Discipline
+•	Structure
+•	Gestion du risque
+•	Probabilité
+________________________________________
+
+🔟 CONCLUSION
+Forex Capture Analyzer PRO est :
+✔️ Un outil d’aide à la décision
+✔️ Un filtre de qualité
+✔️ Un système de lecture structurelle
+⚠️ Ce n’est pas un robot magique.
+Il aide à structurer votre analyse, mais la discipline reste votre responsabilité.
+
+  </div>
+</template>
+
+<!-- ================= DISCLAIMER MODAL (MANDATORY) ================= -->
+<div id="disclaimerOverlay" style="
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.85);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:99999;
+">
+  
+  <div style="
+  width:min(900px,92%);
+  max-height:85vh;
+  background:#111;
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:18px;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  ">
+    <h2 style="margin-top:0">Clause de Non‑Responsabilité</h2>
+    <div style="overflow:auto; flex:1; font-size:13px; line-height:1.65; padding-right:8px;">
+      <pre style="margin:0; white-space:pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; color:rgba(255,255,255,.92);">📜 CLAUSE DE NON-RESPONSABILITÉ
+Forex Capture Analyzer PRO
+________________________________________
+1️⃣ Nature du logiciel
+Le logiciel Forex Capture Analyzer PRO est un outil d’aide à l’analyse technique des marchés financiers.
+Il fournit des indications basées sur des modèles algorithmiques, des structures graphiques et des probabilités statistiques destinées à assister l’utilisateur dans sa lecture des marchés.
+Le logiciel ne constitue en aucun cas :
+•	Un robot de trading automatique
+•	Un service de gestion de portefeuille
+•	Un conseil en investissement personnalisé
+•	Une recommandation financière réglementée
+•	Une garantie de performance
+Il ne remplace pas le jugement, l’expérience ou la responsabilité individuelle de l’utilisateur.
+________________________________________
+2️⃣ Absence de garantie de gains
+Les marchés financiers sont par nature volatils et comportent un risque élevé de perte en capital pouvant entraîner la perte partielle ou totale des fonds investis.
+L’éditeur ne garantit en aucun cas :
+•	La réalisation de profits
+•	L’absence de pertes
+•	La précision absolue des analyses
+•	La fiabilité permanente des résultats
+•	La réussite d’une opération financière
+L’utilisateur reconnaît expressément que toute activité de trading comporte un risque significatif.
+________________________________________
+3️⃣ Responsabilité exclusive de l’utilisateur
+L’utilisateur reconnaît que :
+•	Toute décision de trading est prise sous sa seule et entière responsabilité.
+•	Il agit de manière indépendante, en pleine connaissance des risques.
+•	Il assume intégralement les conséquences financières, directes ou indirectes, de ses opérations.
+En conséquence, l’éditeur, ses dirigeants, partenaires, distributeurs ou représentants ne pourront être tenus responsables :
+•	Des pertes financières subies
+•	Des pertes indirectes ou consécutives
+•	Des dommages matériels ou immatériels
+•	Des décisions prises sur la base des analyses du logiciel
+•	D’un usage inapproprié ou incorrect du logiciel
+________________________________________
+4️⃣ Usage éducatif et informatif
+Le logiciel est destiné exclusivement à un usage :
+•	Éducatif
+•	Informatif
+•	Stratégique
+•	Analytique
+Il ne remplace ni :
+•	Une formation professionnelle en finance
+•	Une gestion de risque rigoureuse
+•	Un accompagnement financier certifié
+•	Un conseil délivré par un professionnel agréé
+________________________________________
+5️⃣ Limitation de responsabilité
+En utilisant le logiciel, l’utilisateur accepte expressément que :
+•	La responsabilité totale et maximale de l’éditeur, pour quelque cause que ce soit, soit strictement limitée au montant effectivement payé pour la licence du logiciel.
+•	Aucune indemnité, réparation ou compensation supérieure ne pourra être réclamée à l’éditeur.
+Cette limitation s’applique dans toute la mesure permise par la loi applicable.
+________________________________________
+6️⃣ Acceptation
+L’installation, l’activation ou l’utilisation du logiciel implique :
+L’acceptation pleine, entière et sans réserve des présentes conditions.
+L’utilisateur reconnaît avoir pris connaissance des risques inhérents au trading et utiliser le logiciel en toute conscience et responsabilité.</pre>
+    </div>
+
+    <div style="margin-top:15px; display:flex; gap:10px; justify-content:flex-end; align-items:center;">
+      <button id="acceptDisclaimer" style="
+      padding:10px 18px;
+      border-radius:10px;
+      border:none;
+      font-weight:bold;
+      cursor:pointer;
+      ">
+      J’accepte
+      </button>
+    </div>
+  </div>
+
+</div>
+
+
+<template id="tpl_cgu">
+  <div style="max-height:70vh; overflow:auto; font-size:13px; line-height:1.6; white-space:pre-wrap;">
+1. OBJET
+Les présentes Conditions Générales d’Utilisation (ci-après « CGU ») ont pour objet de définir les modalités d’accès, d’utilisation et de fonctionnement du site https://forexanalyzer.e-monsite.com/ (ci-après « le Site »).
+Le Site fournit des informations, outils et analyses en lien avec le marché des changes (Forex) à des fins éducatives et informatives.
+L’accès et l’utilisation du Site impliquent l’acceptation pleine et entière des présentes CGU.
+________________________________________
+2. ACCESSIBILITE ET ACCEPTATION
+L’accès au Site est ouvert à toute personne disposant d’un accès Internet.
+En utilisant le Site, l’utilisateur déclare avoir pris connaissance des présentes CGU, les accepter sans réserve et s’engage à les respecter.
+________________________________________
+3. DEFINITIONS
+Dans les présentes CGU :
+•Utilisateur : toute personne naviguant sur le Site.
+•Contenu : textes, données, images, vidéos, analyses, outils, graphiques, commentaires présents sur le Site.
+•Services : toutes les fonctionnalités offertes par le Site (analyses, graphiques, outils interactifs, etc.).
+________________________________________
+4. ACCES AU SITE
+L’Utilisateur peut accéder gratuitement au Site et à ses contenus, sauf indication contraire.
+Le Site se réserve le droit de modifier, interrompre temporairement ou définitivement tout service ou fonctionnalité, sans préavis ni indemnité.
+________________________________________
+5. PROPRIETE INTELLECTUELLE
+L’ensemble des éléments présents sur le Site, notamment les textes, logos, images, vidéos, outils, bases de données, sont protégés par le droit de la propriété intellectuelle.
+Toute reproduction, représentation, modification, retransmission ou publication, même partielle, de ces contenus est interdite sans l’accord préalable écrit de l’administrateur du Site.
+________________________________________
+6. RESPONSABILITES
+Le Site est fourni « en l’état », sans garantie d’exactitude, de fiabilité ou de disponibilité permanente.
+L’Utilisateur reconnaît utiliser les informations du Site sous sa propre responsabilité.
+Le Site ne peut être tenu responsable des dommages directs ou indirects résultant de l’accès ou de l’usage du Site ou de ses contenus.
+________________________________________
+7. DONNEES PERSONNELLES
+Le traitement des données personnelles des Utilisateurs est régi par une Politique de Confidentialité distincte.
+Le Site peut collecter des informations personnelles (ex. : nom, email) lorsque l’Utilisateur les fournit volontairement.
+Ces données sont utilisées uniquement pour les finalités décrites dans la Politique de Confidentialité.
+________________________________________
+8. COOKIES
+Le Site peut utiliser des cookies pour améliorer la navigation et adapter le contenu.
+L’Utilisateur peut configurer son navigateur pour refuser les cookies.
+________________________________________
+9. LIENS EXTERNES
+Le Site peut contenir des liens vers des sites tiers.
+Le Site n’est pas responsable du contenu ou des pratiques de ces sites externes.
+________________________________________
+10. MODIFICATION DES CGU
+Le Site se réserve le droit de modifier les présentes CGU à tout moment.
+Les nouvelles CGU seront applicables dès leur publication sur le Site.
+L’Utilisateur est invité à consulter régulièrement cette page.
+________________________________________
+11. RESILIATION
+L’Utilisateur peut cesser d’utiliser le Site à tout moment.
+Le Site peut suspendre ou fermer l’accès à tout Utilisateur en cas de non-respect des présentes CGU.
+________________________________________
+12. DROIT APPLICABLE ET JURIDICTION
+Les présentes CGU sont soumises au droit en vigueur en Côte d’Ivoire.
+Tout litige relatif à l’interprétation ou à l’exécution des présentes sera soumis aux tribunaux compétents du ressort du siège du Site.
+________________________________________
+13. CONTACT
+Pour toute question concernant ces CGU :
+➡️ Email : forexanalyzerinfos@gmail.com
+  </div>
+</template>
+
+
+
+<template id="tpl_privacy">
+  <div style="max-height:70vh; overflow:auto; font-size:13px; line-height:1.6; white-space:pre-wrap;">
+POLITIQUE DE CONFIDENTIALITÉ
+Dernière mise à jour : 24 Février 2026
+________________________________________
+1. INTRODUCTION
+La présente Politique de Confidentialité a pour objectif d’informer les utilisateurs du site https://forexanalyzer.e-monsite.com/ (ci-après « le Site ») sur la manière dont leurs données personnelles sont collectées, utilisées, protégées et conservées.
+En naviguant sur le Site, l’Utilisateur accepte les pratiques décrites ci-dessous.
+________________________________________
+2. RESPONSABLE DU TRAITEMENT
+Le responsable du traitement des données est :
+Forex Analyzer
+Propriétaire : MEGA SERVICES SARL U
+Pays : Côte d’Ivoire
+Email : forexanalyzerinfos@gmail.com  
+________________________________________
+3. DONNEES COLLECTEES
+Le Site peut collecter les données suivantes :
+3.1 Données fournies volontairement
+Lorsque l’Utilisateur :
+•	Remplit un formulaire de contact
+•	S’inscrit à une newsletter
+•	Effectue une demande d’information
+•	Achète un service ou un abonnement
+Les données suivantes peuvent être collectées :
+•	Nom et prénom
+•	Adresse email
+•	Numéro de téléphone
+•	Informations relatives à l’utilisation du service
+________________________________________
+3.2 DONNEES COLLECTEES AUTOMATIQUEMENT
+Lors de la navigation sur le Site, certaines données peuvent être collectées automatiquement :
+•	Adresse IP
+•	Type de navigateur
+•	Appareil utilisé
+•	Pages consultées
+•	Durée de visite
+•	Données statistiques de navigation
+Ces informations sont utilisées uniquement à des fins statistiques et d’amélioration du service.
+________________________________________
+4. FINALITES DE LA COLLECTE
+Les données collectées servent à :
+•	Fournir les services d’analyse Forex
+•	Répondre aux demandes des utilisateurs
+•	Améliorer l’expérience utilisateur
+•	Assurer la sécurité du Site
+•	Gérer les paiements et abonnements
+•	Envoyer des communications informatives (si consentement)
+________________________________________
+5. BASE LEGALE DU TRAITEMENT
+Les données sont traitées sur la base :
+•	Du consentement de l’Utilisateur
+•	De l’exécution d’un service demandé
+•	Du respect des obligations légales
+•	De l’intérêt légitime du Site (sécurité, amélioration)
+________________________________________
+6. CONSERVATION DES DONNEES
+Les données personnelles sont conservées uniquement pendant la durée nécessaire aux finalités pour lesquelles elles ont été collectées.
+Les données peuvent être supprimées à la demande de l’Utilisateur.
+________________________________________
+7. SECURITE DES DONNEES
+Le Site met en œuvre des mesures techniques et organisationnelles pour protéger les données personnelles contre :
+•	L’accès non autorisé
+•	La perte
+•	La modification
+•	La divulgation
+Cependant, aucune transmission sur Internet n’est totalement sécurisée.
+________________________________________
+8. PARTAGE DES DONNEES
+Les données personnelles ne sont pas vendues ni louées à des tiers.
+Elles peuvent être partagées uniquement avec :
+•	Les prestataires techniques (hébergement, paiement)
+•	Les autorités compétentes si requis par la loi
+________________________________________
+9. COOKIES
+Le Site peut utiliser des cookies afin de :
+•	Améliorer la navigation
+•	Mesurer l’audience
+•	Analyser les performances du site
+L’Utilisateur peut configurer son navigateur pour refuser les cookies.
+________________________________________
+10. DROITS DE L’UTILISATEUR
+Conformément aux lois applicables, l’Utilisateur dispose des droits suivants :
+•	Droit d’accès à ses données
+•	Droit de rectification
+•	Droit de suppression
+•	Droit d’opposition
+•	Droit de limitation du traitement
+Toute demande peut être adressée à :
+📧 contact@forexanalyzer.e-monsite.com
+________________________________________
+11. DONNEES DES MINEURS
+Le Site ne s’adresse pas aux personnes mineures.
+Aucune collecte volontaire de données de mineurs n’est effectuée.
+________________________________________
+12. MODIFICATIONS
+La présente Politique de Confidentialité peut être modifiée à tout moment.
+La version mise à jour sera publiée sur cette page avec la date de révision.
+________________________________________
+13. CONTACT
+Pour toute question relative à la protection des données :
+📧 forexanalyzerinfos@gmail.com  
+🌍 https://forexanalyzer.e-monsite.com/
+________________________________________
+⚖️ CLAUSE IMPORTANTE (FOREX)
+Les informations fournies sur le Site sont à caractère éducatif et informatif.
+Elles ne constituent pas un conseil en investissement.
+L’Utilisateur reste seul responsable de ses décisions de trading.
+  </div>
+</template>
+
+
+
+<template id="tpl_cgv">
+  <div style="max-height:70vh; overflow:auto; font-size:13px; line-height:1.6; white-space:pre-wrap;">
+CONDITIONS GÉNÉRALES DE VENTE (CGV)
+Forex Analyzer – Logiciel d’analyse Forex
+Dernière mise à jour : 24 Février 2026
+________________________________________
+1. OBJET
+Les présentes Conditions Générales de Vente (CGV) régissent la vente et l’utilisation du logiciel Forex Analyzer, édité par MEGA SERVICES SARL U (ci-après « l’Éditeur »).
+Le logiciel est proposé sous forme :
+•	D’accès en ligne 
+•	Ou de licence numérique
+•	Ou d’abonnement premium
+Toute commande implique l’acceptation sans réserve des présentes CGV.
+________________________________________
+2. DESCRIPTION DU PRODUIT
+Forex Analyzer est un outil d’analyse visuelle destiné à :
+•	L’interprétation technique de graphiques Forex
+•	L’assistance pédagogique à la lecture des marchés
+•	L’aide à la décision non automatisée
+Le logiciel n’est pas un robot de trading et n’exécute aucune opération financière.
+________________________________________
+3. PRIX
+Les prix sont indiqués en FCFA ou dans la devise affichée sur le site.
+L’Éditeur se réserve le droit de modifier ses prix à tout moment.
+Le prix applicable est celui affiché au moment de la commande.
+________________________________________
+4. PAIEMENT
+Le paiement est exigible immédiatement lors de la commande.
+Les moyens de paiement acceptés peuvent inclure :
+•	Wave
+•	Orange Money
+•	MTN Money
+•	Carte bancaire
+•	Tout autre moyen indiqué sur le site
+L’accès au logiciel est activé après confirmation du paiement.
+________________________________________
+5. LIVRAISON / ACTIVATION
+L’accès au logiciel est fourni :
+•	Soit immédiatement après paiement
+•	Soit par envoi d’une clé de licence
+•	Soit par activation de compte
+L’utilisateur est responsable de fournir des informations exactes.
+________________________________________
+⚠️ 6. AVERTISSEMENT – RISQUE FINANCIER
+Le trading comporte un risque élevé de perte en capital.
+Le logiciel Forex Analyzer :
+•	Ne garantit aucun gain
+•	Ne promet aucun rendement
+•	Ne constitue pas un conseil financier
+•	Ne remplace pas un conseiller en investissement
+L’utilisateur reste seul responsable de ses décisions de trading.
+________________________________________
+🔒 7. CLAUSE DE LIMITATION DE RESPONSABILITÉ 
+En aucun cas MEGA SERVICES SARL U ne pourra être tenue responsable :
+•	Des pertes financières subies par l’utilisateur
+•	Des décisions d’investissement prises
+•	Des pertes directes ou indirectes
+•	Des pertes d’exploitation
+•	Des pertes de données
+•	Des dommages liés à une mauvaise utilisation du logiciel
+La responsabilité totale de l’Éditeur, si elle était engagée, est strictement limitée au montant payé par l’utilisateur pour la licence concernée.
+________________________________________
+🚫 8. CLAUSE D’INTERDICTION DE REDISTRIBUTION
+La licence accordée à l’utilisateur est :
+•	Strictement personnelle
+•	Non transférable
+•	Non cessible
+•	Non revendable
+Il est formellement interdit :
+•	De partager le logiciel
+•	De revendre la licence
+•	De publier le logiciel sur internet
+•	De transmettre les fichiers à un tiers
+•	De donner l’accès à plusieurs utilisateurs via un seul compte
+Toute violation entraînera :
+•	La résiliation immédiate de la licence
+•	La désactivation du compte
+•	D’éventuelles poursuites judiciaires
+________________________________________
+🛡 9. CLAUSE ANTI-COPIE / ANTI-INGÉNIERIE INVERSE
+Il est strictement interdit :
+•	De copier tout ou partie du logiciel
+•	De modifier le code source
+•	De décompiler
+•	De désassembler
+•	D’extraire les algorithmes
+•	De reproduire l’interface
+•	De créer un logiciel similaire basé sur Forex Analyzer
+•	De contourner le système de licence ou de sécurité
+Toute tentative de contournement, piratage, modification ou rétro-ingénierie constitue une violation grave des droits de propriété intellectuelle.
+L’Éditeur se réserve le droit d’engager :
+•	Des poursuites civiles
+•	Des poursuites pénales
+•	Des demandes de dommages et intérêts
+________________________________________
+10. RESILIATION
+L’Éditeur peut suspendre ou supprimer l’accès en cas :
+•	De non-respect des CGV
+•	De fraude
+•	De tentative de piratage
+•	De partage illégal
+Aucun remboursement ne sera effectué en cas de violation des présentes conditions.
+________________________________________
+11. DROIT DE RETRACTATION
+Conformément à la nature numérique du produit (accès immédiat),
+l’utilisateur accepte expressément renoncer à son droit de rétractation dès activation du service.
+________________________________________
+12. FORCE MAJEURE
+L’Éditeur ne pourra être tenu responsable en cas de force majeure :
+•	Panne serveur
+•	Attaque informatique
+•	Problème réseau
+•	Catastrophe naturelle
+•	Décision administrative
+________________________________________
+13. DROIT APPLICABLE
+Les présentes CGV sont régies par le droit en vigueur en Côte d’Ivoire.
+Tout litige sera soumis aux juridictions compétentes du ressort du siège de MEGA SERVICES SARL U.
+  </div>
+</template>
+
+
+
+<template id="tpl_mentions">
+  <div style="max-height:70vh; overflow:auto; font-size:13px; line-height:1.6; white-space:pre-wrap;">
+MENTIONS LÉGALES
+Dernière mise à jour : 24 Février 2026
+________________________________________
+1. ÉDITEUR DU SITE
+Le site internet accessible à l’adresse :
+👉 https://forexanalyzer.e-monsite.com/
+est édité par :
+MEGA SERVICES SARL U
+Entreprise de services numériques et informatiques
+Pays : Côte d’Ivoire
+Ville : Diabo / Bouaké / Abidjan
+Téléphone : (à compléter)
+Email : forexanalyzerinfos@gmail.com  
+Responsable de la publication :
+Le représentant légal de MEGA SERVICES SARL U
+________________________________________
+2. HEBERGEMENT
+Le site est hébergé par :
+E-monsite
+Société éditrice de la plateforme e-monsite
+Site web : https://www.e-monsite.com
+Les infrastructures d’hébergement sont assurées par leurs prestataires techniques.
+________________________________________
+3. OBJET DU SITE
+Le site Forex Analyzer est une plateforme proposant :
+•	Des outils d’analyse visuelle Forex
+•	Des contenus éducatifs liés au trading
+•	Des informations pédagogiques sur les marchés financiers
+•	Éventuellement des services premium ou abonnements
+Le site a une vocation strictement informative et éducative.
+________________________________________
+4. AVERTISSEMENT – RISQUES FINANCIERS
+Le trading sur les marchés financiers comporte des risques élevés de perte en capital.
+Les informations fournies sur le site ne constituent :
+•	Ni un conseil en investissement
+•	Ni une recommandation financière personnalisée
+•	Ni une incitation à acheter ou vendre des instruments financiers
+L’utilisateur est seul responsable de ses décisions d’investissement.
+MEGA SERVICES SARL U ne pourra être tenue responsable des pertes financières résultant de l’utilisation du site ou de ses outils.
+________________________________________
+5. PROPRIETE INTELLECTUELLE
+L’ensemble du contenu présent sur le site (textes, logos, images, logiciels, interfaces, outils d’analyse, graphiques, bases de données) est protégé par le droit de la propriété intellectuelle.
+Toute reproduction, diffusion ou exploitation sans autorisation écrite préalable est strictement interdite.
+________________________________________
+6. DONNEES PERSONNELLES
+Les données personnelles collectées sur le site sont traitées conformément à la Politique de Confidentialité disponible sur le site.
+L’utilisateur dispose d’un droit d’accès, de rectification et de suppression de ses données en contactant :
+📧 forexanalyzerinfos@gmail.com  
+________________________________________
+7. RESPONSABILITE
+Le site est accessible 24h/24 et 7j/7, sauf cas de force majeure, maintenance ou incident technique.
+MEGA SERVICES SARL U ne saurait être tenue responsable :
+•	Des interruptions de service
+•	Des erreurs ou omissions dans les contenus
+•	Des dommages directs ou indirects liés à l’utilisation du site
+________________________________________
+8. LIENS EXTERNES
+Le site peut contenir des liens vers des sites tiers.
+MEGA SERVICES SARL U n’exerce aucun contrôle sur ces sites et décline toute responsabilité quant à leur contenu.
+________________________________________
+9. DROIT APPLICABLE
+Les présentes mentions légales sont soumises au droit en vigueur en Côte d’Ivoire.
+Tout litige relatif à l’utilisation du site sera soumis aux juridictions compétentes du ressort du siège de l’éditeur.
+  </div>
+</template>
+
+
+  <script src="/assets/cloud-shell.js" defer></script>
+</body>
+</html>

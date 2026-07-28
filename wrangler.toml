@@ -1,0 +1,21 @@
+name = "forex-capture-analyzer-pro"
+compatibility_date = "2026-07-28"
+pages_build_output_dir = "./public"
+
+[[kv_namespaces]]
+binding = "FOREX_KV"
+id = "8e8f17076a7840eba723ca071ae8b76a"
+
+[[d1_databases]]
+binding = "FOREX_D1"
+database_name = "Forex_d1"
+database_id = "c15a88c1-f0c6-4c1d-9807-b29c0c0a25ea"
+migrations_dir = "migrations"
+
+[vars]
+APP_NAME = "Forex Capture Analyzer Pro"
+SUPER_ADMIN_EMAIL = "mega@services.local"
+SESSION_HOURS = "12"
+FREE_PLAN_DAYS = "21"
+BUSINESS_PLAN_DAYS = "365"
+BUSINESS_PAYMENT_URL = "https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=365000"
