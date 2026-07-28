@@ -78,3 +78,13 @@ Cloudflare Pages relance automatiquement le build.
 npm run build
 npm run deploy
 ```
+
+## URL de connexion après déploiement
+
+Utilisez exactement :
+
+```text
+https://globalforextrading.pages.dev/login
+```
+
+N’ajoutez pas `login.html` et ne recréez pas de règle `_redirects` pour `/login`. Cloudflare Pages gère automatiquement l’URL HTML canonique sans extension.

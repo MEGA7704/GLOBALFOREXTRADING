@@ -141,3 +141,18 @@ CLOUDFLARE_BUILD_EXACT.md
 ## Remarque
 
 L’application reste un outil éducatif d’aide à l’analyse. Elle ne garantit aucun résultat financier.
+
+## Correction de la boucle `/login` — version 2.0.1
+
+Cloudflare Pages redirige automatiquement `login.html` vers l’URL canonique `/login`.
+Dans la version précédente, le Worker demandait de nouveau `/login.html` à `env.ASSETS`, ce qui pouvait produire la boucle `/login` → `/login.html` → `/login`.
+
+La correction applique désormais les règles suivantes :
+
+- le navigateur utilise uniquement `/login` et `/plan-expired` ;
+- `public/_worker.js` demande les mêmes chemins sans extension à `env.ASSETS` ;
+- `/login.html` et `/plan-expired.html` sont redirigés une seule fois vers leurs URL canoniques ;
+- le fichier `public/_redirects` a été supprimé, car le Worker gère déjà `/login`, `/app` et la protection des pages ;
+- un contrôle automatique bloque toute réintroduction de cette boucle pendant `npm run check`.
+
+Après déploiement, ouvrez directement `https://votre-projet.pages.dev/login`.

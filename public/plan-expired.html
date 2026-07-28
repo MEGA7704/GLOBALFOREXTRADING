@@ -44,7 +44,7 @@
       async function csrf(){const r=await fetch('/api/csrf',{credentials:'same-origin'});const d=await r.json();csrfToken=d.csrfToken||'';}
       async function load(){try{await csrf();const r=await fetch('/api/me',{credentials:'same-origin'});const d=await r.json();if(r.ok&&d.plan){document.getElementById('planDetails').textContent=`Plan ${d.plan.label} · expiration : ${new Intl.DateTimeFormat('fr-FR',{dateStyle:'long'}).format(new Date(d.plan.expiresAt))}`;}}catch{}}
       document.getElementById('buyBusiness').addEventListener('click',()=>window.open(paymentUrl,'_blank','noopener,noreferrer'));
-      document.getElementById('logoutButton').addEventListener('click',async()=>{try{if(!csrfToken)await csrf();await fetch('/api/logout',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrfToken},body:'{}',credentials:'same-origin'});}finally{location.replace('/login.html');}});
+      document.getElementById('logoutButton').addEventListener('click',async()=>{try{if(!csrfToken)await csrf();await fetch('/api/logout',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrfToken},body:'{}',credentials:'same-origin'});}finally{location.replace('/login');}});
       load();
     })();
   </script>

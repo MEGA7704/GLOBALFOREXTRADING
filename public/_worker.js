@@ -12,8 +12,6 @@ const PAYMENT_URL = "https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=36500
 const APP_STATE_MAX_BYTES = 350000;
 
 const PUBLIC_ASSETS = new Set([
-  "/login.html",
-  "/plan-expired.html",
   "/favicon.ico",
   "/robots.txt"
 ]);
@@ -1174,20 +1172,47 @@ export default {
       }
 
       if (path === "/_worker.js") return addSecurityHeaders(new Response("Not found", { status: 404 }), path);
-      const isPublic = PUBLIC_ASSETS.has(path) || path.startsWith("/assets/");
-      if (path === "/login.html" || path === "/login") {
-        if (auth) return Response.redirect(new URL("/", url), 302);
-        return addSecurityHeaders(await serveAsset(env, request, "/login.html"), "/login.html");
+
+      // Cloudflare Pages canonicalise automatiquement /page.html vers /page.
+      // Ne jamais demander un fichier .html à env.ASSETS ici : cela provoquerait
+      // une boucle /login -> /login.html -> /login avec le routage Advanced Mode.
+      if (path === "/login.html") {
+        const canonical = new URL("/login", url);
+        canonical.search = url.search;
+        return Response.redirect(canonical, 308);
       }
-      if (isPublic) return addSecurityHeaders(await serveAsset(env, request), path);
+      if (path === "/plan-expired.html") {
+        const canonical = new URL("/plan-expired", url);
+        canonical.search = url.search;
+        return Response.redirect(canonical, 308);
+      }
+
+      const isPublicAsset = PUBLIC_ASSETS.has(path) || path.startsWith("/assets/");
+      if (isPublicAsset) return addSecurityHeaders(await serveAsset(env, request), path);
+
+      if (path === "/login") {
+        if (auth) return Response.redirect(new URL("/", url), 303);
+        return addSecurityHeaders(await serveAsset(env, request, "/login"), "/login");
+      }
+
       if (!auth) {
-        const loginUrl = new URL("/login.html", url);
+        const loginUrl = new URL("/login", url);
         loginUrl.searchParams.set("next", `${path}${url.search}`);
-        return Response.redirect(loginUrl, 302);
+        return Response.redirect(loginUrl, 303);
       }
+
+      if (path === "/plan-expired") {
+        if (auth.user.role === "member" && !auth.plan?.active) {
+          return addSecurityHeaders(await serveAsset(env, request, "/plan-expired"), "/plan-expired");
+        }
+        return Response.redirect(new URL("/", url), 303);
+      }
+
       if (auth.user.role === "member" && !auth.plan?.active) {
-        return addSecurityHeaders(await serveAsset(env, request, "/plan-expired.html"), "/plan-expired.html");
+        return Response.redirect(new URL("/plan-expired", url), 303);
       }
+
+      if (path === "/app") return Response.redirect(new URL("/", url), 303);
       return addSecurityHeaders(await serveAsset(env, request), path);
     } catch (error) {
       const status = Number(error.status || 400);

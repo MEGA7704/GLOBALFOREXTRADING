@@ -37,6 +37,20 @@ for (const expected of [
   if (!worker.includes(expected)) throw new Error(`Protection serveur manquante : ${expected}`);
 }
 
+
+if (worker.includes('serveAsset(env, request, "/login.html")') || worker.includes('serveAsset(env, request, "/plan-expired.html")')) {
+  throw new Error("Risque de boucle Cloudflare détecté : env.ASSETS ne doit pas recevoir une route .html canonique.");
+}
+if (!worker.includes('serveAsset(env, request, "/login")') || !worker.includes('serveAsset(env, request, "/plan-expired")')) {
+  throw new Error("Routes HTML canoniques Cloudflare manquantes.");
+}
+try {
+  await access("public/_redirects");
+  throw new Error("public/_redirects ne doit pas être présent : le Worker gère déjà /login et /app.");
+} catch (error) {
+  if (error?.code !== "ENOENT") throw error;
+}
+
 async function collectFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = [];
@@ -62,4 +76,4 @@ for (const file of browserFiles) {
   }
 }
 
-console.log("Vérification réussie : authentification, CSRF, isolation entreprise et architecture Advanced Mode conformes.");
+console.log("Vérification réussie : authentification, CSRF, isolation entreprise et architecture Advanced Mode conformes, sans boucle de redirection.");

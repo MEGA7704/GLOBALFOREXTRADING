@@ -58,7 +58,7 @@
     });
     const data = await response.json().catch(() => ({}));
     if (response.status === 401) {
-      location.replace(`/login.html?next=${encodeURIComponent(location.pathname + location.search)}`);
+      location.replace(`/login?next=${encodeURIComponent(location.pathname + location.search)}`);
       throw new Error("Session expirée.");
     }
     if (response.status === 403 && /CSRF/i.test(data.error || "") && retryCsrf) {
@@ -66,7 +66,7 @@
       return api(path, options, false);
     }
     if (data.code === "PLAN_EXPIRED") {
-      location.replace("/plan-expired.html");
+      location.replace("/plan-expired");
       throw new Error(data.error || "Abonnement expiré.");
     }
     if (!response.ok) {
@@ -481,7 +481,7 @@
         body: JSON.stringify({ currentPassword, newPassword })
       });
       alert("Mot de passe modifié. Toutes vos sessions ont été invalidées. Reconnectez-vous.");
-      location.replace("/login.html");
+      location.replace("/login");
     } catch (error) { toast(error.message, "error"); }
   }
 
@@ -489,7 +489,7 @@
     try {
       await api("/api/logout", { method: "POST", body: "{}" });
     } finally {
-      location.replace("/login.html");
+      location.replace("/login");
     }
   }
 
