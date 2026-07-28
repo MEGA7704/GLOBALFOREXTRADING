@@ -5,11 +5,109 @@ const SESSION_TTL_SECONDS = 60 * 60 * 12;
 const CSRF_TTL_SECONDS = 60 * 60;
 const LOGIN_WINDOW_SECONDS = 15 * 60;
 const LOGIN_MAX_ATTEMPTS = 5;
+const REGISTER_MAX_ATTEMPTS = 3;
 const PBKDF2_ITERATIONS = 600000;
 const FREE_PLAN_DAYS = 21;
 const BUSINESS_PLAN_DAYS = 365;
 const PAYMENT_URL = "https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=365000";
 const APP_STATE_MAX_BYTES = 350000;
+
+const APP_SCHEMA_VERSION = 3;
+
+const FINAL_TABLE_STATEMENTS = [
+  `CREATE TABLE IF NOT EXISTS app_schema_meta (
+    name TEXT PRIMARY KEY,
+    version INTEGER NOT NULL,
+    updated_at TEXT NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS companies (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    plan_code TEXT NOT NULL DEFAULT 'free' CHECK (plan_code IN ('free','business')),
+    plan_started_at TEXT NOT NULL,
+    plan_expires_at TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','disabled')),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    company_id TEXT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('member','super_admin')),
+    is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0,1)),
+    session_version INTEGER NOT NULL DEFAULT 1,
+    last_login_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+  )`,
+  `CREATE TABLE IF NOT EXISTS password_credentials (
+    user_id TEXT PRIMARY KEY,
+    password_hash TEXT NOT NULL,
+    algorithm TEXT NOT NULL DEFAULT 'pbkdf2_sha256',
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  )`,
+  `CREATE TABLE IF NOT EXISTS analyses (
+    id TEXT PRIMARY KEY,
+    company_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    source_type TEXT NOT NULL DEFAULT 'capture',
+    decision TEXT,
+    trend TEXT,
+    confidence REAL,
+    noise REAL,
+    score INTEGER,
+    risk INTEGER,
+    rr REAL,
+    timeframe TEXT,
+    entry_mode TEXT,
+    zone_recommended TEXT,
+    conclusion TEXT,
+    raw_result TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  )`,
+  `CREATE TABLE IF NOT EXISTS audit_logs (
+    id TEXT PRIMARY KEY,
+    actor_user_id TEXT,
+    actor_company_id TEXT,
+    target_user_id TEXT,
+    action TEXT NOT NULL,
+    ip_address TEXT,
+    user_agent TEXT,
+    details TEXT,
+    created_at TEXT NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS company_data (
+    company_id TEXT NOT NULL,
+    data_key TEXT NOT NULL,
+    data_json TEXT NOT NULL,
+    revision INTEGER NOT NULL DEFAULT 1,
+    updated_by TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (company_id, data_key),
+    FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+    FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE RESTRICT
+  )`
+];
+
+const FINAL_INDEX_STATEMENTS = [
+  `CREATE INDEX IF NOT EXISTS idx_companies_status_plan ON companies(status, plan_expires_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`,
+  `CREATE INDEX IF NOT EXISTS idx_users_company ON users(company_id, is_active)`,
+  `CREATE INDEX IF NOT EXISTS idx_analyses_company_date ON analyses(company_id, created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_analyses_user_date ON analyses(user_id, created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_audit_date ON audit_logs(created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_audit_actor ON audit_logs(actor_user_id, created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_audit_target ON audit_logs(target_user_id, created_at DESC)`
+];
+
+let databaseReadyPromise = null;
 
 const PUBLIC_ASSETS = new Set([
   "/favicon.ico",
@@ -242,6 +340,198 @@ function sanitizeCompany(auth) {
   };
 }
 
+async function tableExists(db, tableName) {
+  const row = await db.prepare(
+    "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1"
+  ).bind(tableName).first();
+  return Boolean(row);
+}
+
+async function tableColumns(db, tableName) {
+  // tableName is selected only from internal constants, never from user input.
+  const result = await db.prepare(`PRAGMA table_info(${tableName})`).all();
+  return new Set((result.results || []).map(row => String(row.name)));
+}
+
+function schemaStatements(db, statements) {
+  return statements.map(statement => db.prepare(statement));
+}
+
+async function createFinalSchema(db) {
+  const now = new Date().toISOString();
+  await db.batch([
+    ...schemaStatements(db, FINAL_TABLE_STATEMENTS),
+    ...schemaStatements(db, FINAL_INDEX_STATEMENTS),
+    db.prepare(`
+      INSERT INTO app_schema_meta (name, version, updated_at)
+      VALUES ('global_forex_trading', ?, ?)
+      ON CONFLICT(name) DO UPDATE SET
+        version = excluded.version,
+        updated_at = excluded.updated_at
+    `).bind(APP_SCHEMA_VERSION, now)
+  ]);
+}
+
+async function migrateLegacySchema(db) {
+  const legacyUsers = "users_legacy_autofix_v5";
+  const legacyAnalyses = "analyses_legacy_autofix_v5";
+  const legacyAudit = "audit_logs_legacy_autofix_v5";
+
+  if (await tableExists(db, legacyUsers)) {
+    throw new Error("Migration D1 interrompue détectée. Supprimez les tables *_legacy_autofix_v5 ou restaurez la sauvegarde D1 avant de redéployer.");
+  }
+
+  const hasAnalyses = await tableExists(db, "analyses");
+  const hasAudit = await tableExists(db, "audit_logs");
+  const now = new Date().toISOString();
+  const statements = [
+    db.prepare(`ALTER TABLE users RENAME TO ${legacyUsers}`)
+  ];
+  if (hasAnalyses) statements.push(db.prepare(`ALTER TABLE analyses RENAME TO ${legacyAnalyses}`));
+  if (hasAudit) statements.push(db.prepare(`ALTER TABLE audit_logs RENAME TO ${legacyAudit}`));
+
+  statements.push(...schemaStatements(db, FINAL_TABLE_STATEMENTS));
+  statements.push(db.prepare(`
+    INSERT OR IGNORE INTO companies (
+      id, name, plan_code, plan_started_at, plan_expires_at,
+      status, created_at, updated_at
+    )
+    SELECT
+      'company-' || id,
+      CASE WHEN trim(name) = '' THEN 'Entreprise migrée' ELSE trim(name) END,
+      'free',
+      COALESCE(created_at, ?),
+      datetime(COALESCE(created_at, ?), '+21 days'),
+      CASE WHEN is_active = 1 THEN 'active' ELSE 'disabled' END,
+      COALESCE(created_at, ?),
+      COALESCE(updated_at, ?)
+    FROM ${legacyUsers}
+  `).bind(now, now, now, now));
+  statements.push(db.prepare(`
+    INSERT OR IGNORE INTO users (
+      id, company_id, name, email, role, is_active, session_version,
+      last_login_at, created_at, updated_at, deleted_at
+    )
+    SELECT
+      id,
+      CASE WHEN role = 'admin' THEN NULL ELSE 'company-' || id END,
+      name,
+      lower(trim(email)),
+      CASE WHEN role = 'admin' THEN 'super_admin' ELSE 'member' END,
+      is_active,
+      1,
+      last_login_at,
+      COALESCE(created_at, ?),
+      COALESCE(updated_at, ?),
+      NULL
+    FROM ${legacyUsers}
+  `).bind(now, now));
+  statements.push(db.prepare(`
+    INSERT OR REPLACE INTO password_credentials (user_id, password_hash, algorithm, updated_at)
+    SELECT id, password_hash, 'pbkdf2_sha256', COALESCE(updated_at, ?)
+    FROM ${legacyUsers}
+    WHERE password_hash IS NOT NULL AND password_hash <> ''
+  `).bind(now));
+
+  if (hasAnalyses) {
+    statements.push(db.prepare(`
+      INSERT OR IGNORE INTO analyses (
+        id, company_id, user_id, source_type, decision, trend, confidence,
+        noise, score, risk, rr, timeframe, entry_mode, zone_recommended,
+        conclusion, raw_result, created_at
+      )
+      SELECT
+        id, 'company-' || user_id, user_id, source_type, decision, trend,
+        confidence, noise, score, risk, rr, timeframe, entry_mode,
+        zone_recommended, conclusion, raw_result, created_at
+      FROM ${legacyAnalyses}
+      WHERE EXISTS (SELECT 1 FROM users u WHERE u.id = ${legacyAnalyses}.user_id)
+    `));
+  }
+  if (hasAudit) {
+    statements.push(db.prepare(`
+      INSERT OR IGNORE INTO audit_logs (
+        id, actor_user_id, actor_company_id, target_user_id, action,
+        ip_address, user_agent, details, created_at
+      )
+      SELECT
+        id,
+        user_id,
+        CASE WHEN user_id IS NULL THEN NULL ELSE 'company-' || user_id END,
+        NULL,
+        action,
+        ip_address,
+        user_agent,
+        details,
+        created_at
+      FROM ${legacyAudit}
+    `));
+  }
+
+  if (hasAnalyses) statements.push(db.prepare(`DROP TABLE ${legacyAnalyses}`));
+  if (hasAudit) statements.push(db.prepare(`DROP TABLE ${legacyAudit}`));
+  statements.push(db.prepare(`DROP TABLE ${legacyUsers}`));
+  statements.push(...schemaStatements(db, FINAL_INDEX_STATEMENTS));
+  statements.push(db.prepare(`
+    INSERT INTO app_schema_meta (name, version, updated_at)
+    VALUES ('global_forex_trading', ?, ?)
+    ON CONFLICT(name) DO UPDATE SET
+      version = excluded.version,
+      updated_at = excluded.updated_at
+  `).bind(APP_SCHEMA_VERSION, now));
+
+  await db.batch(statements);
+}
+
+async function verifyFinalSchema(db) {
+  const requiredTables = [
+    "companies", "users", "password_credentials", "analyses",
+    "audit_logs", "company_data", "app_schema_meta"
+  ];
+  const placeholders = requiredTables.map(() => "?").join(",");
+  const result = await db.prepare(
+    `SELECT name FROM sqlite_master WHERE type = 'table' AND name IN (${placeholders})`
+  ).bind(...requiredTables).all();
+  const found = new Set((result.results || []).map(row => String(row.name)));
+  const missing = requiredTables.filter(name => !found.has(name));
+  if (missing.length) throw new Error(`Initialisation D1 incomplète : tables manquantes (${missing.join(", ")}).`);
+
+  const usersColumns = await tableColumns(db, "users");
+  for (const column of ["company_id", "role", "session_version", "deleted_at"]) {
+    if (!usersColumns.has(column)) throw new Error(`Schéma D1 incompatible : colonne users.${column} absente.`);
+  }
+  if (usersColumns.has("password_hash")) {
+    throw new Error("Schéma D1 non sécurisé : password_hash doit être déplacé vers password_credentials.");
+  }
+  const credentialColumns = await tableColumns(db, "password_credentials");
+  for (const column of ["user_id", "password_hash", "algorithm", "updated_at"]) {
+    if (!credentialColumns.has(column)) throw new Error(`Schéma D1 incompatible : colonne password_credentials.${column} absente.`);
+  }
+}
+
+async function initializeDatabase(db) {
+  const hasUsers = await tableExists(db, "users");
+  if (!hasUsers) {
+    await createFinalSchema(db);
+  } else {
+    const columns = await tableColumns(db, "users");
+    const isLegacy = columns.has("password_hash") && !columns.has("company_id");
+    if (isLegacy) await migrateLegacySchema(db);
+    else await createFinalSchema(db);
+  }
+  await verifyFinalSchema(db);
+}
+
+async function ensureDatabaseSchema(env) {
+  if (!databaseReadyPromise) {
+    databaseReadyPromise = initializeDatabase(env.FOREX_D1).catch(error => {
+      databaseReadyPromise = null;
+      throw error;
+    });
+  }
+  return databaseReadyPromise;
+}
+
 function requestMeta(request) {
   return {
     ip: request.headers.get("CF-Connecting-IP") || "unknown",
@@ -445,6 +735,32 @@ async function clearLoginFailures(env, keys) {
   await Promise.all([env.FOREX_KV.delete(keys.ipKey), env.FOREX_KV.delete(keys.accountKey)]);
 }
 
+async function registrationRateKeys(env, request, email) {
+  const ip = requestMeta(request).ip;
+  return {
+    ipKey: `register-rate:ip:${await sha256(ip)}`,
+    accountKey: `register-rate:account:${await sha256(normalizeEmail(email))}`
+  };
+}
+
+async function consumeRegistrationSlot(env, request, email) {
+  const keys = await registrationRateKeys(env, request, email);
+  const [ipCount, accountCount] = await Promise.all([
+    readCounter(env, keys.ipKey),
+    readCounter(env, keys.accountKey)
+  ]);
+  if (ipCount >= REGISTER_MAX_ATTEMPTS || accountCount >= REGISTER_MAX_ATTEMPTS) {
+    const error = new Error("Trop de tentatives d’inscription. Réessayez dans 15 minutes.");
+    error.status = 429;
+    error.headers = { "Retry-After": String(LOGIN_WINDOW_SECONDS) };
+    throw error;
+  }
+  await Promise.all([
+    env.FOREX_KV.put(keys.ipKey, JSON.stringify({ count: ipCount + 1 }), { expirationTtl: LOGIN_WINDOW_SECONDS }),
+    env.FOREX_KV.put(keys.accountKey, JSON.stringify({ count: accountCount + 1 }), { expirationTtl: LOGIN_WINDOW_SECONDS })
+  ]);
+}
+
 async function ensureInitialSuperAdmin(env, request, email, password) {
   const configuredEmail = normalizeEmail(env.SUPER_ADMIN_EMAIL || "mega@services.local");
   if (email !== configuredEmail) return null;
@@ -511,8 +827,8 @@ async function handleStatus(env, auth) {
   let d1 = "indisponible";
   let kv = "indisponible";
   try {
-    await env.FOREX_D1.prepare("SELECT 1 AS ok").first();
-    d1 = "FOREX_D1 connecté";
+    await ensureDatabaseSchema(env);
+    d1 = `FOREX_D1 connecté — schéma v${APP_SCHEMA_VERSION}`;
   } catch { d1 = "migration requise"; }
   try {
     await env.FOREX_KV.get("system:health");
@@ -522,8 +838,104 @@ async function handleStatus(env, auth) {
     ok: d1.includes("connecté") && kv.includes("connecté"),
     authenticated: Boolean(auth),
     services: { d1, kv },
-    version: "2.0.0"
+    version: "2.1.0"
   });
+}
+
+async function handleRegister(env, request) {
+  assertCsrf(request);
+  if (!env.AUTH_PEPPER) {
+    const error = new Error("Le secret AUTH_PEPPER n’est pas configuré dans Cloudflare.");
+    error.status = 503;
+    throw error;
+  }
+  const body = await readJson(request, 20000);
+  const name = safeText(body.name, 100);
+  const companyName = safeText(body.companyName, 140);
+  const email = validateEmail(body.email);
+  const password = validatePassword(body.password);
+  const passwordConfirm = String(body.passwordConfirm || "");
+  if (name.length < 2) throw new Error("Le nom et les prénoms sont requis.");
+  if (companyName.length < 2) throw new Error("Le nom de l’entreprise ou de l’activité est requis.");
+  if (!constantTimeEqual(password, passwordConfirm)) throw new Error("Les deux mots de passe ne correspondent pas.");
+  const superAdminEmail = normalizeEmail(env.SUPER_ADMIN_EMAIL || "mega@services.local");
+  if (email === superAdminEmail) {
+    const error = new Error("Cette adresse est réservée à l’administration.");
+    error.status = 403;
+    throw error;
+  }
+
+  await consumeRegistrationSlot(env, request, email);
+  const existing = await env.FOREX_D1.prepare(
+    "SELECT id FROM users WHERE email = ? LIMIT 1"
+  ).bind(email).first();
+  if (existing) {
+    const error = new Error("Cette adresse e-mail est déjà utilisée.");
+    error.status = 409;
+    throw error;
+  }
+
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const companyId = crypto.randomUUID();
+  const userId = crypto.randomUUID();
+  const expiresAt = addDays(now, FREE_PLAN_DAYS);
+  const passwordHash = await hashPassword(password, env.AUTH_PEPPER);
+
+  try {
+    await env.FOREX_D1.batch([
+      env.FOREX_D1.prepare(`
+        INSERT INTO companies (
+          id, name, plan_code, plan_started_at, plan_expires_at, status, created_at, updated_at
+        ) VALUES (?, ?, 'free', ?, ?, 'active', ?, ?)
+      `).bind(companyId, companyName, nowIso, expiresAt, nowIso, nowIso),
+      env.FOREX_D1.prepare(`
+        INSERT INTO users (
+          id, company_id, name, email, role, is_active, session_version, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, 'member', 1, 1, ?, ?)
+      `).bind(userId, companyId, name, email, nowIso, nowIso),
+      env.FOREX_D1.prepare(`
+        INSERT INTO password_credentials (user_id, password_hash, algorithm, updated_at)
+        VALUES (?, ?, 'pbkdf2_sha256', ?)
+      `).bind(userId, passwordHash, nowIso)
+    ]);
+  } catch (error) {
+    if (/UNIQUE|constraint/i.test(String(error?.message || ""))) {
+      const conflict = new Error("Cette adresse e-mail est déjà utilisée.");
+      conflict.status = 409;
+      throw conflict;
+    }
+    throw error;
+  }
+
+  const user = {
+    id: userId,
+    company_id: companyId,
+    name,
+    email,
+    role: "member",
+    is_active: 1,
+    session_version: 1
+  };
+  const token = await createSession(env, user, request);
+  await auditBestEffort(env, request, {
+    actorUserId: userId,
+    actorCompanyId: companyId,
+    targetUserId: userId,
+    action: "MEMBER_SELF_REGISTERED",
+    details: { email, companyName, planCode: "free", expiresAt }
+  });
+  return json({
+    ok: true,
+    user: { id: userId, name, email, role: "member" },
+    company: { id: companyId, name: companyName },
+    plan: computePlan({
+      plan_code: "free",
+      plan_started_at: nowIso,
+      plan_expires_at: expiresAt,
+      status: "active"
+    })
+  }, 201, { "Set-Cookie": sessionCookie(token) });
 }
 
 async function handleLogin(env, request) {
@@ -1100,6 +1512,7 @@ async function handleApi(env, request, auth) {
 
   if (path === "/api/csrf" && method === "GET") return handleCsrf();
   if (path === "/api/status" && method === "GET") return handleStatus(env, auth);
+  if (path === "/api/register" && method === "POST") return handleRegister(env, request);
   if (path === "/api/login" && method === "POST") return handleLogin(env, request);
   if (path === "/api/logout" && method === "POST") return handleLogout(env, request, auth);
   if (path === "/api/me" && method === "GET") return handleMe(auth);
@@ -1179,6 +1592,7 @@ export default {
       if (!env.FOREX_KV || !env.FOREX_D1) {
         return addSecurityHeaders(json({ error: "Bindings FOREX_KV ou FOREX_D1 manquants." }, 503), path);
       }
+      await ensureDatabaseSchema(env);
       let auth = null;
       try { auth = await getAuth(env, request); } catch (error) {
         if (path.startsWith("/api/")) throw error;

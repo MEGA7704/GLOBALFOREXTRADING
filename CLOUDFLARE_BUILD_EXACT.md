@@ -98,3 +98,9 @@ https://globalforextrading.pages.dev/login
 ```
 
 Cette URL doit afficher la page de connexion sans modifier l'adresse en `/login.html`. Le build `npm run build` supprime automatiquement les anciens fichiers HTML de connexion conservés dans le dépôt.
+
+## Initialisation D1 V5
+
+Après le déploiement, ouvrez `/login`. Le Worker initialise automatiquement une base D1 vide avant de traiter la connexion. La commande `npm run db:migrate:remote` reste disponible, mais n’est plus obligatoire pour corriger l’erreur `no such table: users`.
+
+Les secrets `AUTH_PEPPER` et `SUPER_ADMIN_INITIAL_PASSWORD` restent obligatoires.

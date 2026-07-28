@@ -2,6 +2,8 @@
   const $ = (id) => document.getElementById(id);
   const alertBox = $("authAlert");
   const loginForm = $("loginForm");
+  const registerForm = $("registerForm");
+  const passwordHelpBox = $("passwordHelpBox");
   let csrfToken = "";
 
   function showAlert(message, type = "error") {
@@ -47,6 +49,16 @@
     if (!csrfToken) throw new Error("Impossible d’obtenir le jeton de sécurité.");
   }
 
+  function setMode(mode) {
+    const registering = mode === "register";
+    loginForm.hidden = registering;
+    registerForm.hidden = !registering;
+    passwordHelpBox.hidden = registering;
+    clearAlert();
+    const target = registering ? $("registerName") : $("loginEmail");
+    window.setTimeout(() => target?.focus(), 40);
+  }
+
   async function loadStatus() {
     try {
       await refreshCsrf();
@@ -57,7 +69,7 @@
       }
       $("systemState").textContent = status.ok ? "Système opérationnel" : "Configuration Cloudflare requise";
     } catch (error) {
-      showAlert("Impossible de joindre le serveur Cloudflare. Vérifiez les bindings, secrets et migrations D1.");
+      showAlert("Impossible de joindre le serveur Cloudflare. Vérifiez les bindings, secrets et la base D1.");
       $("systemState").textContent = "Système indisponible";
     }
   }
@@ -80,12 +92,49 @@
       location.replace(safeNext());
     } catch (error) {
       if (error.status === 403) {
-        try { await refreshCsrf(); } catch { /* A new attempt will display the server error. */ }
+        try { await refreshCsrf(); } catch { /* La prochaine tentative affichera l’erreur serveur. */ }
       }
       showAlert(error.message);
       button.disabled = false;
     }
   });
+
+  registerForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    clearAlert();
+    const button = $("registerButton");
+    const password = $("registerPassword").value;
+    const passwordConfirm = $("registerPasswordConfirm").value;
+    if (password !== passwordConfirm) {
+      showAlert("Les deux mots de passe ne correspondent pas.");
+      return;
+    }
+    button.disabled = true;
+    try {
+      if (!csrfToken) await refreshCsrf();
+      await api("/api/register", {
+        method: "POST",
+        body: JSON.stringify({
+          name: $("registerName").value.trim(),
+          companyName: $("registerCompany").value.trim(),
+          email: $("registerEmail").value.trim(),
+          password,
+          passwordConfirm
+        })
+      });
+      showAlert("Compte créé. Votre plan Free de 21 jours est activé…", "success");
+      location.replace(safeNext());
+    } catch (error) {
+      if (error.status === 403) {
+        try { await refreshCsrf(); } catch { /* La prochaine tentative affichera l’erreur serveur. */ }
+      }
+      showAlert(error.message);
+      button.disabled = false;
+    }
+  });
+
+  $("showRegisterButton").addEventListener("click", () => setMode("register"));
+  $("showLoginButton").addEventListener("click", () => setMode("login"));
 
   document.querySelectorAll("[data-toggle-password]").forEach((button) => {
     button.addEventListener("click", () => {

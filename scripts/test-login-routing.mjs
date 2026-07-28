@@ -3,7 +3,34 @@ import worker from "../public/_worker.js";
 
 const env = {
   FOREX_KV: { get: async () => null },
-  FOREX_D1: {},
+  FOREX_D1: {
+    prepare(sql) {
+      const statement = {
+        sql,
+        values: [],
+        bind(...values) { this.values = values; return this; },
+        async first() {
+          if (sql.includes("sqlite_master") && sql.includes("name = ?")) return { name: this.values[0] };
+          return null;
+        },
+        async all() {
+          if (sql.includes("PRAGMA table_info(users)")) {
+            return { results: ["id", "company_id", "name", "email", "role", "is_active", "session_version", "last_login_at", "created_at", "updated_at", "deleted_at"].map(name => ({ name })) };
+          }
+          if (sql.includes("PRAGMA table_info(password_credentials)")) {
+            return { results: ["user_id", "password_hash", "algorithm", "updated_at"].map(name => ({ name })) };
+          }
+          if (sql.includes("sqlite_master") && sql.includes("name IN")) {
+            return { results: ["companies", "users", "password_credentials", "analyses", "audit_logs", "company_data", "app_schema_meta"].map(name => ({ name })) };
+          }
+          return { results: [] };
+        },
+        async run() { return { success: true, meta: { changes: 0 } }; }
+      };
+      return statement;
+    },
+    async batch(statements) { return statements.map(() => ({ success: true })); }
+  },
   ASSETS: {
     async fetch(request) {
       const path = new URL(request.url).pathname;

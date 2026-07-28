@@ -19,3 +19,5 @@
 | Migration des anciens hashes | Déplacement de `users.password_hash` vers `password_credentials` dans la migration 0002 |
 | Plans | Free 21 jours, Business 365 jours, dates calculées côté serveur |
 | Popup Free | Ouverture de l’application, ouverture des sections et rappel toutes les 15 minutes |
+
+- [x] Schéma D1 final initialisé et vérifié automatiquement côté Worker avant toute authentification.

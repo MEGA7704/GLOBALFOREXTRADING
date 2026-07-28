@@ -9,6 +9,7 @@ const required = [
   "public/assets/login.js",
   "public/assets/cloud-shell.js",
   "migrations/0002_security_multitenancy.sql",
+  "migrations/0003_runtime_schema_meta.sql",
   "wrangler.toml"
 ];
 for (const file of required) await access(file);
@@ -27,12 +28,17 @@ for (const expected of [
 const worker = await readFile("public/_worker.js", "utf8");
 for (const expected of [
   'path === "/api/login" && method === "POST"',
+  'path === "/api/register" && method === "POST"',
+  'MEMBER_SELF_REGISTERED',
   'path === "/api/load" && method === "GET"',
   'path === "/api/save" && method === "POST"',
   "HttpOnly; Secure; SameSite=Lax",
   "assertCsrf(request)",
   "invalidateAllUserSessions",
-  "password_credentials"
+  "password_credentials",
+  "ensureDatabaseSchema",
+  "CREATE TABLE IF NOT EXISTS users",
+  "APP_SCHEMA_VERSION"
 ]) {
   if (!worker.includes(expected)) throw new Error(`Protection serveur manquante : ${expected}`);
 }
@@ -65,6 +71,13 @@ async function collectFiles(directory) {
   return files;
 }
 
+const loginPage = await readFile("public/internal-pages/login.page", "utf8");
+for (const expected of ["showRegisterButton", "registerForm", "Créer mon compte", "plan Free de 21 jours"]) {
+  if (!loginPage.includes(expected)) throw new Error(`Interface d’inscription manquante : ${expected}`);
+}
+const loginScript = await readFile("public/assets/login.js", "utf8");
+if (!loginScript.includes('/api/register')) throw new Error("Appel navigateur /api/register manquant.");
+
 const browserFiles = (await collectFiles("public")).filter(file => file !== "public/_worker.js");
 for (const file of browserFiles) {
   const content = await readFile(file, "utf8").catch(() => "");
@@ -79,4 +92,4 @@ for (const file of browserFiles) {
   }
 }
 
-console.log("Vérification réussie : sécurité conforme et ancien public/_redirects supprimé automatiquement.");
+console.log("Vérification réussie : sécurité, inscription membre et routage Cloudflare conformes.");

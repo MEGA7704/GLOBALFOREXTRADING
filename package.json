@@ -1,6 +1,6 @@
 {
   "name": "global-forex-trading-cloudflare",
-  "version": "2.0.3",
+  "version": "2.1.0",
   "private": true,
   "description": "GLOBAL FOREX TRADING sur Cloudflare Pages Advanced Mode avec KV, D1, multi-entreprises et Super Admin.",
   "scripts": {

@@ -14,6 +14,7 @@ const required = [
   "public/assets/cloud-shell.css",
   "migrations/0001_initial.sql",
   "migrations/0002_security_multitenancy.sql",
+  "migrations/0003_runtime_schema_meta.sql",
   "wrangler.toml"
 ];
 
@@ -24,7 +25,7 @@ for (const route of ["/api/login", "/api/load", "/api/save", "/api/admin/account
 }
 await writeFile("public/build-info.json", JSON.stringify({
   name: "GLOBAL FOREX TRADING",
-  version: "2.0.3",
+  version: "2.0.4",
   architecture: "Cloudflare Pages Advanced Mode",
   buildAt: new Date().toISOString()
 }, null, 2));

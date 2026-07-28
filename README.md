@@ -1,5 +1,17 @@
 # GLOBAL FOREX TRADING — Cloudflare Pages sécurisé
 
+## Inscription autonome des membres — version 2.1.0
+
+La page de connexion comporte désormais un bouton **S’inscrire** placé à côté de **Se connecter**. Un membre peut créer son compte avec son nom, son entreprise ou activité, son adresse e-mail et un mot de passe robuste. La route serveur `POST /api/register` crée exclusivement un rôle `member`, une entreprise isolée et un plan **Free de 21 jours**, puis ouvre une session sécurisée. Le rôle, le statut et le plan ne sont jamais choisis par le navigateur. Les inscriptions sont limitées à trois tentatives par adresse IP et par e-mail sur une période de quinze minutes.
+
+## Correctif V5 — initialisation D1 automatique
+
+La version V5 corrige automatiquement l’erreur `D1_ERROR: no such table: users`. Avant toute route d’authentification ou API, `public/_worker.js` vérifie le schéma D1 et crée les tables finales manquantes. Une base D1 vide devient donc utilisable dès le premier appel, sans exécution préalable obligatoire de `wrangler d1 migrations apply`.
+
+Tables initialisées : `companies`, `users`, `password_credentials`, `analyses`, `audit_logs`, `company_data` et `app_schema_meta`. L’ancien schéma contenant `users.password_hash` est détecté et migré vers `password_credentials`.
+
+Les migrations Wrangler restent fournies pour la maintenance manuelle, mais elles ne bloquent plus la première connexion sur une base vide.
+
 ## Correctif V4 — boucle de redirection éliminée
 
 La page publique `/login` n'est plus servie via un fichier `.html`. Elle est lue par `public/_worker.js` depuis `public/internal-pages/login.page`, puis renvoyée directement avec un statut `200` et `Content-Type: text/html`. Cela empêche Cloudflare Pages de rediriger `/login` vers `/login.html`.
@@ -25,11 +37,11 @@ Version 2.0 convertie en projet GitHub + Cloudflare Pages **Advanced Mode** avec
 
 ## Corrections de sécurité appliquées
 
-- vraie route serveur `POST /api/login`;
+- vraie route serveur `POST /api/login` ;
 - vérification et hachage des mots de passe uniquement dans `public/_worker.js` ;
 - aucun hash, sel ou donnée d’authentification sensible renvoyé au navigateur ;
 - routes `GET /api/load` et `POST /api/save` protégées par session ;
-- cookie de session `HttpOnly; Secure; SameSite=Lax`;
+- cookie de session `HttpOnly; Secure; SameSite=Lax` ;
 - jeton CSRF obligatoire sur toutes les écritures, y compris connexion et déconnexion ;
 - rôles serveur `member` et `super_admin` ;
 - données D1 toujours filtrées par `company_id` issu de la session ;
@@ -147,12 +159,14 @@ Le cookie de production impose `Secure`. Le contrôle final de connexion doit do
 public/
   _worker.js             Routeur, authentification et sécurité serveur
   index.html             Application
-  login.html             Connexion
-  plan-expired.html      Échéance d’abonnement
+  internal-pages/
+    login.page           Connexion servie directement par le Worker
+    plan-expired.page    Échéance d’abonnement servie par le Worker
   assets/                Interface navigateur
 migrations/
   0001_initial.sql
   0002_security_multitenancy.sql
+  0003_runtime_schema_meta.sql
 scripts/
 wrangler.toml
 package.json

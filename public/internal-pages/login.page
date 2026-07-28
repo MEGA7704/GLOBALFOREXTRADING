@@ -13,7 +13,7 @@
       <div class="grid-glow"></div>
       <div class="visual-content">
         <div class="visual-badge">CLOUDFLARE SECURE EDITION</div>
-        <h1>FOREX CAPTURE<br/><span>ANALYZER PRO</span></h1>
+        <h1>GLOBAL FOREX<br/><span>TRADING</span></h1>
         <p>Analyse visuelle, données d’entreprise isolées et administration centralisée avec Cloudflare KV et D1.</p>
         <div class="feature-grid">
           <article><b>KV</b><span>Sessions sécurisées et limitation des tentatives</span></article>
@@ -41,10 +41,40 @@
           <label>Mot de passe
             <span class="password-field"><input id="loginPassword" name="password" type="password" autocomplete="current-password" required minlength="10" maxlength="128" placeholder="Votre mot de passe"/><button type="button" data-toggle-password="loginPassword" aria-label="Afficher le mot de passe">◉</button></span>
           </label>
-          <button class="primary-btn" id="loginButton" type="submit"><span>Se connecter</span><i>→</i></button>
+          <div class="auth-actions">
+            <button class="primary-btn" id="loginButton" type="submit"><span>Se connecter</span><i>→</i></button>
+            <button class="secondary-btn" id="showRegisterButton" type="button"><span>S’inscrire</span><i>＋</i></button>
+          </div>
         </form>
 
-        <div class="setup-note" style="margin-top:14px">
+        <form id="registerForm" autocomplete="on" hidden>
+          <div class="form-heading">
+            <b>Créer un compte membre</b>
+            <span>Votre plan Free de 21 jours sera activé automatiquement.</span>
+          </div>
+          <label>Nom et prénoms
+            <input id="registerName" name="name" type="text" autocomplete="name" required minlength="2" maxlength="100" placeholder="Votre nom complet"/>
+          </label>
+          <label>Entreprise ou activité
+            <input id="registerCompany" name="companyName" type="text" autocomplete="organization" required minlength="2" maxlength="140" placeholder="Nom de votre entreprise ou activité"/>
+          </label>
+          <label>Adresse e-mail
+            <input id="registerEmail" name="email" type="email" autocomplete="email" required maxlength="180" placeholder="votre@email.com"/>
+          </label>
+          <label>Mot de passe
+            <span class="password-field"><input id="registerPassword" name="password" type="password" autocomplete="new-password" required minlength="12" maxlength="128" placeholder="12 caractères minimum"/><button type="button" data-toggle-password="registerPassword" aria-label="Afficher le mot de passe">◉</button></span>
+          </label>
+          <label>Confirmer le mot de passe
+            <span class="password-field"><input id="registerPasswordConfirm" name="passwordConfirm" type="password" autocomplete="new-password" required minlength="12" maxlength="128" placeholder="Confirmez votre mot de passe"/><button type="button" data-toggle-password="registerPasswordConfirm" aria-label="Afficher le mot de passe">◉</button></span>
+          </label>
+          <p class="password-help">Utilisez au moins 12 caractères avec une majuscule, une minuscule, un chiffre et un caractère spécial.</p>
+          <div class="auth-actions">
+            <button class="primary-btn" id="registerButton" type="submit"><span>Créer mon compte</span><i>→</i></button>
+            <button class="secondary-btn" id="showLoginButton" type="button"><span>Retour</span><i>↩</i></button>
+          </div>
+        </form>
+
+        <div class="setup-note" id="passwordHelpBox" style="margin-top:14px">
           <b>Mot de passe perdu :</b> contactez le Super Admin, qui peut réinitialiser votre accès sans consulter votre ancien mot de passe.
         </div>
 
