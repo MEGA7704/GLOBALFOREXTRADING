@@ -29,7 +29,7 @@ Version 2.0 convertie en projet GitHub + Cloudflare Pages **Advanced Mode** avec
 - vérification et hachage des mots de passe uniquement dans `public/_worker.js` ;
 - aucun hash, sel ou donnée d’authentification sensible renvoyé au navigateur ;
 - routes `GET /api/load` et `POST /api/save` protégées par session ;
-- cookie de session `HttpOnly; Secure; SameSite=Lax` ;
+- cookie de session `HttpOnly; Secure; SameSite=Lax`;
 - jeton CSRF obligatoire sur toutes les écritures, y compris connexion et déconnexion ;
 - rôles serveur `member` et `super_admin` ;
 - données D1 toujours filtrées par `company_id` issu de la session ;
