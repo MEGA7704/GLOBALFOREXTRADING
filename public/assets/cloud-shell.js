@@ -583,6 +583,9 @@
   }
 
   document.querySelectorAll("[data-cloud-action]").forEach(button => button.addEventListener("click", event => { event.preventDefault(); action(button.dataset.cloudAction); }));
+  ["btnPick", "btnAnalyze", "btnFit", "btnReset", "btnOpenResults"].forEach(id => {
+    $(id)?.addEventListener("click", () => setTimeout(showPlanPopup, 250));
+  });
   $("cloudUserButton")?.addEventListener("click", event => {
     event.stopPropagation();
     const menu = $("cloudUserMenu");

@@ -372,7 +372,7 @@
   }
 
 </style>
-  <link rel="stylesheet" href="/assets/cloud-shell.css?v=2.4.0"/>
+  <link rel="stylesheet" href="/assets/cloud-shell.css?v=2.5.0"/>
 </head>
 <body class="role-pending">
 
@@ -387,14 +387,22 @@
 
   <button class="cloud-shell__toggle" id="cloudMenuToggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
 
-  <nav class="cloud-shell__nav" id="cloudMenu" aria-label="Navigation principale">
-    <button type="button" data-cloud-action="home" data-role-scope="member">Accueil</button>
-    <button type="button" data-cloud-action="upload" data-role-scope="member">Téléverser</button>
-    <button type="button" data-cloud-action="analyze" data-role-scope="member">Analyser</button>
-    <button type="button" data-cloud-action="live" data-role-scope="member">LIVE</button>
-    <button type="button" data-cloud-action="results" data-role-scope="member">Résultats</button>
-    <button type="button" data-cloud-action="history" data-role-scope="member">Historique</button>
-    <button type="button" data-cloud-action="guide" data-role-scope="member">Guide</button>
+  <nav class="cloud-shell__nav" id="cloudMenu" aria-label="Menu principal">
+    <button type="button" class="cloud-analysis-action upload" id="btnPick" data-role-scope="member">Téléverser</button>
+    <button type="button" class="cloud-analysis-action analyze" id="btnAnalyze" data-role-scope="member">Analyser</button>
+    <button type="button" class="cloud-analysis-action" id="btnFit" data-role-scope="member">Ajuster</button>
+    <button type="button" class="cloud-analysis-action reset" id="btnReset" data-role-scope="member">Reset</button>
+    <button type="button" class="cloud-analysis-action" id="btnOpenResults" data-role-scope="member">Résultats</button>
+    <button type="button" class="cloud-analysis-action" data-cloud-action="history" data-role-scope="member">Historique</button>
+
+    <div class="cloud-shell__tools" id="overlayToggles" data-role-scope="member" title="Afficher ou masquer les outils graphiques">
+      <button type="button" class="cloud-tool-action tbtn on" data-tg="trend">Trendline</button>
+      <button type="button" class="cloud-tool-action tbtn on" data-tg="zones">Zones</button>
+      <button type="button" class="cloud-tool-action tbtn on" data-tg="limit">Limit</button>
+      <button type="button" class="cloud-tool-action tbtn on" data-tg="tp">TP</button>
+      <button type="button" class="cloud-tool-action tbtn on" data-tg="bands">Bands</button>
+    </div>
+
     <button type="button" data-cloud-action="admin" data-role-scope="super_admin" hidden>Membres</button>
     <button type="button" data-cloud-action="audit" data-role-scope="super_admin" hidden>Journal</button>
     <button type="button" data-cloud-action="status" data-role-scope="super_admin" hidden>Système</button>
@@ -429,27 +437,7 @@
   <!-- VISUAL ZONE + CONTROLE -->
   <section class="card visualCard">
     <input id="fileInput" type="file" accept=".png,.jpg,.jpeg,.webp" />
-    <div class="visualTop">
-      <div class="left">
-        <div class="note"><b>Contrôle — Upload / LIVE / Analyse</b></div>
-        <div class="note" id="statusLine">Dépose une capture sur le canvas, ou clique “Téléverser”, puis “Analyser”.</div>
-      </div>
-      <div class="right row">
-        <button class="btn ok" id="btnPick">Téléverser</button>
-        <button class="btn ok" id="btnAnalyze">Analyser</button>
-        <button class="btn" id="btnFit">Ajuster</button>
-        <button class="btn bad" id="btnReset">Reset</button>
-      
-        <div class="togglesInline" id="overlayToggles" title="Afficher / masquer les overlays">
-          <button class="tbtn on" data-tg="trend">Trendline</button>
-          <button class="tbtn on" data-tg="zones">Zones</button>
-          <button class="tbtn on" data-tg="limit">Limit</button>
-          <button class="tbtn on" data-tg="tp">TP</button>
-          <button class="tbtn on" data-tg="bands">Bands</button>
-        </div>
-
-      </div>
-    </div>
+    <div id="statusLine" class="cloud-visually-hidden" aria-live="polite"></div>
 
     <div class="canvasWrap" id="wrapCanvas">
       <canvas id="cv"></canvas>
@@ -2639,6 +2627,6 @@ Tout litige relatif à l’utilisation du site sera soumis aux juridictions comp
 </template>
 
 
-  <script src="/assets/cloud-shell.js?v=2.4.0" defer></script>
+  <script src="/assets/cloud-shell.js?v=2.5.0" defer></script>
 </body>
 </html>

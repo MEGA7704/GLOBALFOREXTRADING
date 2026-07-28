@@ -81,6 +81,21 @@ for (const expected of ["GOBAL TRADING", "Forex Capture Analyzer Edition", "supe
 }
 if (appPage.includes('<section class="topbar">')) throw new Error("Ancien en-tête dupliqué encore présent.");
 if (/onclick="openModal\('CONDITIONS GÉNÉRALES D’UTILISATION/.test(appPage)) throw new Error("Les boutons légaux sous la carte principale doivent être supprimés.");
+for (const expected of [
+  'id="btnPick" data-role-scope="member">Téléverser',
+  'id="btnAnalyze" data-role-scope="member">Analyser',
+  'id="btnFit" data-role-scope="member">Ajuster',
+  'id="btnReset" data-role-scope="member">Reset',
+  'id="btnOpenResults" data-role-scope="member">Résultats',
+  'data-cloud-action="history" data-role-scope="member">Historique',
+  'id="overlayToggles" data-role-scope="member"'
+]) {
+  if (!appPage.includes(expected)) throw new Error(`Action d’analyse absente du menu supérieur : ${expected}`);
+}
+if (appPage.includes("Contrôle — Upload / LIVE / Analyse")) throw new Error("Le titre de contrôle doit être supprimé de la carte d’analyse.");
+if (appPage.includes("Dépose une capture sur le canvas, ou clique “Téléverser”, puis “Analyser”.")) throw new Error("Le texte d’aide visible doit être supprimé de la carte d’analyse.");
+if ((appPage.match(/id="btnPick"/g) || []).length !== 1) throw new Error("Le bouton Téléverser doit exister une seule fois.");
+if ((appPage.match(/id="overlayToggles"/g) || []).length !== 1) throw new Error("Les outils graphiques ne doivent pas être dupliqués.");
 const shellScript = await readFile("public/assets/cloud-shell.js", "utf8");
 for (const expected of ["activateRoleInterface", 'showAdmin({ inline: true })', 'document.body.classList.add(isAdmin ? "super-admin-mode" : "member-mode")']) {
   if (!shellScript.includes(expected)) throw new Error(`Séparation visuelle des rôles manquante : ${expected}`);

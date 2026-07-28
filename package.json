@@ -1,6 +1,6 @@
 {
   "name": "global-forex-trading-cloudflare",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "private": true,
   "description": "GOBAL TRADING — interface militaire professionnelle et administration séparée sur Cloudflare Pages.",
   "scripts": {
