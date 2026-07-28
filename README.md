@@ -25,7 +25,7 @@ Version 2.0 convertie en projet GitHub + Cloudflare Pages **Advanced Mode** avec
 
 ## Corrections de sécurité appliquées
 
-- vraie route serveur `POST /api/login` ;
+- vraie route serveur `POST /api/login`;
 - vérification et hachage des mots de passe uniquement dans `public/_worker.js` ;
 - aucun hash, sel ou donnée d’authentification sensible renvoyé au navigateur ;
 - routes `GET /api/load` et `POST /api/save` protégées par session ;
