@@ -57,7 +57,7 @@
 
   function clearRegistrationFields() {
     registerForm.reset();
-    for (const id of ["registerName", "registerCompany", "registerEmail", "registerPassword", "registerPasswordConfirm"]) {
+    for (const id of ["registerName", "registerContact", "registerEmail", "registerPassword", "registerPasswordConfirm"]) {
       const field = $(id);
       if (field) field.value = "";
     }
@@ -166,7 +166,7 @@
         method: "POST",
         body: JSON.stringify({
           name: $("registerName").value.trim(),
-          companyName: $("registerCompany").value.trim(),
+          companyName: $("registerContact").value.trim(),
           email: $("registerEmail").value.trim(),
           password,
           passwordConfirm

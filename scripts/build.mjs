@@ -26,7 +26,7 @@ for (const route of ["/api/login", "/api/register", "/api/password-reset-request
 }
 await writeFile("public/build-info.json", JSON.stringify({
   name: "GLOBAL FOREX TRADING",
-  version: "2.7.0",
+  version: "2.8.0",
   architecture: "Cloudflare Pages Advanced Mode",
   buildAt: new Date().toISOString()
 }, null, 2));

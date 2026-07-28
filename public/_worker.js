@@ -957,7 +957,7 @@ async function handleRegister(env, request) {
   const password = validatePassword(body.password);
   const passwordConfirm = String(body.passwordConfirm || "");
   if (name.length < 2) throw new Error("Le nom et les prénoms sont requis.");
-  if (companyName.length < 2) throw new Error("Le nom de l’entreprise ou de l’activité est requis.");
+  if (companyName.length < 2) throw new Error("Le contact est requis.");
   if (!constantTimeEqual(password, passwordConfirm)) throw new Error("Les deux mots de passe ne correspondent pas.");
   // Une seule adresse est réservée : l’adresse exacte du Super Admin.
   // Aucun domaine ni aucune autre adresse membre ne doit être bloqué.

@@ -374,6 +374,27 @@ input:focus {
   border-bottom: 1px solid var(--line);
 }
 .dialog-title-wrap { display: flex; align-items: center; gap: 13px; min-width: 0; }
+.dialog-head--register-centered {
+  position: relative;
+  display: block;
+  padding-right: 48px;
+  padding-left: 48px;
+  text-align: center;
+}
+.dialog-title-wrap--centered {
+  display: grid;
+  width: 100%;
+  justify-items: center;
+  gap: 0;
+}
+.dialog-head--register-centered .dialog-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+.dialog-head--register-centered .dialog-kicker,
+.dialog-head--register-centered h2,
+.dialog-head--register-centered p { text-align: center; }
 .dialog-kicker { display: block; color: #aabe7b; font-size: 9px; font-weight: 900; letter-spacing: 1.25px; }
 .dialog-head h2 { margin: 3px 0 0; font-size: 21px; }
 .dialog-head p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
