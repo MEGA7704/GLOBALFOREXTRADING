@@ -4,9 +4,9 @@ import { access, readFile, writeFile, rm } from "node:fs/promises";
 await rm("public/_redirects", { force: true });
 await rm("public/login.html", { force: true });
 await rm("public/plan-expired.html", { force: true });
+await rm("public/index.html", { force: true });
 
 const required = [
-  "public/index.html",
   "public/internal-pages/home.page",
   "public/internal-pages/login.page",
   "public/internal-pages/app.page",
@@ -29,7 +29,7 @@ for (const route of ["/api/login", "/api/register", "/api/password-reset-request
 }
 await writeFile("public/build-info.json", JSON.stringify({
   name: "GLOBAL FOREX TRADING",
-  version: "2.9.0",
+  version: "2.11.0",
   architecture: "Cloudflare Pages Advanced Mode",
   buildAt: new Date().toISOString()
 }, null, 2));

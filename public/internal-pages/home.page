@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <meta name="description" content="GLOBAL FOREX TRADING — plateforme sécurisée d’analyse de captures Forex."/>
   <title>GLOBAL FOREX TRADING — Forex Capture Analyzer Edition</title>
-  <link rel="stylesheet" href="/assets/home.css?v=2.10.0"/>
+  <link rel="stylesheet" href="/assets/home.css?v=2.11.0"/>
 </head>
 <body>
   <header class="site-header">
@@ -232,6 +232,6 @@
     </div>
   </template>
 
-  <script src="/assets/home.js?v=2.10.0" defer></script>
+  <script src="/assets/home.js?v=2.11.0" defer></script>
 </body>
 </html>

@@ -180,8 +180,9 @@ Le cookie de production impose `Secure`. Le contrôle final de connexion doit do
 ```text
 public/
   _worker.js             Routeur, authentification et sécurité serveur
-  index.html             Application
   internal-pages/
+    home.page            Page d’accueil publique unique
+    app.page             Application protégée
     login.page           Connexion servie directement par le Worker
     plan-expired.page    Échéance d’abonnement servie par le Worker
   assets/                Interface navigateur
@@ -226,3 +227,11 @@ migrations/0004_password_reset_requests.sql
 ```
 
 Le Worker initialise aussi automatiquement cette table lors du premier appel après déploiement.
+
+
+## Correction ciblée V16 — footer compact et accueil unique
+
+- Le footer de la page d’accueil a été compacté afin de réduire nettement la hauteur de la bande.
+- L’ancienne page `public/index.html` a été supprimée définitivement.
+- La racine `/` est servie uniquement par `public/internal-pages/home.page`.
+- `/index.html` redirige vers `/` sans conserver une seconde page d’accueil.

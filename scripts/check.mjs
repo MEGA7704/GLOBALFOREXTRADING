@@ -2,7 +2,6 @@ import { access, readFile, readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 
 const required = [
-  "public/index.html",
   "public/internal-pages/home.page",
   "public/internal-pages/login.page",
   "public/internal-pages/app.page",
@@ -71,6 +70,9 @@ if (/const PBKDF2_ITERATIONS = (?!100000)/.test(worker)) throw new Error("PBKDF2
 await rm("public/_redirects", { force: true });
 await rm("public/login.html", { force: true });
 await rm("public/plan-expired.html", { force: true });
+await rm("public/index.html", { force: true });
+
+try { await access("public/index.html"); throw new Error("L’ancienne page d’accueil public/index.html ne doit plus être présente."); } catch (error) { if (error && error.message && error.message.includes("ancienne page")) throw error; }
 
 const homePage = await readFile("public/internal-pages/home.page", "utf8");
 for (const expected of [
