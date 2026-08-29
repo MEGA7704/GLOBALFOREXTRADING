@@ -59,7 +59,7 @@
     });
     const data = await response.json().catch(() => ({}));
     if (response.status === 401) {
-      location.replace(`/login?next=${encodeURIComponent(location.pathname + location.search)}`);
+      location.replace(`/?auth=login&next=${encodeURIComponent(location.pathname + location.search)}`);
       throw new Error("Session expirée.");
     }
     if (response.status === 403 && /CSRF/i.test(data.error || "") && retryCsrf) {
@@ -624,7 +624,7 @@ ${newPassword}`);
         body: JSON.stringify({ currentPassword, newPassword })
       });
       alert("Mot de passe modifié. Toutes vos sessions ont été invalidées. Reconnectez-vous.");
-      location.replace("/login");
+      location.replace("/?auth=login&next=%2Fapp");
     } catch (error) { toast(error.message, "error"); }
   }
 
@@ -632,7 +632,7 @@ ${newPassword}`);
     try {
       await api("/api/logout", { method: "POST", body: "{}" });
     } finally {
-      location.replace("/login");
+      location.replace("/?auth=login&next=%2Fapp");
     }
   }
 

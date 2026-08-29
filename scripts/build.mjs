@@ -5,14 +5,16 @@ await rm("public/_redirects", { force: true });
 await rm("public/login.html", { force: true });
 await rm("public/plan-expired.html", { force: true });
 await rm("public/index.html", { force: true });
+await rm("public/internal-pages/login.page", { force: true });
+await rm("public/assets/login.js", { force: true });
 
 const required = [
   "public/internal-pages/home.page",
-  "public/internal-pages/login.page",
   "public/internal-pages/app.page",
   "public/internal-pages/plan-expired.page",
   "public/_worker.js",
   "public/assets/cloud-shell.js",
+  "public/assets/login.css",
   "public/assets/cloud-shell.css",
   "migrations/0001_initial.sql",
   "migrations/0002_security_multitenancy.sql",
@@ -29,8 +31,8 @@ for (const route of ["/api/login", "/api/register", "/api/password-reset-request
 }
 await writeFile("public/build-info.json", JSON.stringify({
   name: "GLOBAL FOREX TRADING",
-  version: "2.11.0",
+  version: "2.12.0",
   architecture: "Cloudflare Pages Advanced Mode",
   buildAt: new Date().toISOString()
 }, null, 2));
-console.log("Build validé : public/_worker.js et les ressources statiques sont prêts pour Cloudflare Pages.");
+console.log("Build validé : accueil unique avec authentification en popup et ressources Cloudflare prêtes.");

@@ -1,11 +1,11 @@
 {
   "name": "global-forex-trading-cloudflare",
-  "version": "2.11.0",
+  "version": "2.12.0",
   "private": true,
-  "description": "GLOBAL FOREX TRADING — page d’accueil unique, footer compact et plans Free 7 j, Standard 30 j, Business 365 j.",
+  "description": "GLOBAL FOREX TRADING — accueil unique avec connexion, inscription et mot de passe oublié exclusivement en popup.",
   "scripts": {
     "build": "npm run check && node scripts/build.mjs",
-    "check": "node scripts/check.mjs && node scripts/test-login-routing.mjs && node --check public/_worker.js && node --check public/assets/home.js && node --check public/assets/login.js && node --check public/assets/cloud-shell.js",
+    "check": "node scripts/check.mjs && node scripts/test-login-routing.mjs && node --check public/_worker.js && node --check public/assets/home.js && node --check public/assets/cloud-shell.js",
     "dev": "wrangler pages dev",
     "deploy": "wrangler pages deploy public --project-name=global-forex-trading",
     "db:migrate:local": "wrangler d1 migrations apply Forex_d1 --local",

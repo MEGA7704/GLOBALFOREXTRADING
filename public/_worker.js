@@ -1888,9 +1888,8 @@ function addSecurityHeaders(response, pathname) {
     pathname.startsWith("/api/") ||
     pathname.endsWith(".html") ||
     pathname === "/" ||
-    pathname === "/login" ||
-    pathname === "/assets/login.css" ||
-    pathname === "/assets/login.js"
+    pathname === "/assets/home.css" ||
+    pathname === "/assets/home.js"
   ) {
     output.headers.set("Cache-Control", "no-store, max-age=0");
   }
@@ -1908,9 +1907,8 @@ async function serveAsset(env, request, pathname = null) {
   }));
 }
 
-// Les pages d'authentification sont stockées avec une extension non HTML.
-// Cela neutralise les redirections automatiques de Cloudflare Pages entre
-// /login.html et /login. Le Worker renvoie lui-même une réponse HTML 200.
+// Les pages HTML internes sont servies explicitement par le Worker.
+// L’authentification utilisateur est désormais intégrée en popup à la page d’accueil.
 async function serveInternalHtml(env, request, assetPath) {
   const asset = await serveAsset(env, request, assetPath);
   if (!asset.ok) {
@@ -1939,6 +1937,14 @@ export default {
           "/"
         );
       }
+      // Toute ancienne URL de connexion/inscription revient sur l’accueil et ouvre le popup.
+      if (path === "/login" || path === "/login.html") {
+        const homeUrl = new URL("/", url);
+        homeUrl.searchParams.set("auth", url.searchParams.get("register") === "1" ? "register" : "login");
+        const next = url.searchParams.get("next");
+        if (next) homeUrl.searchParams.set("next", next);
+        return Response.redirect(homeUrl, 303);
+      }
       if (PUBLIC_ASSETS.has(path) || path.startsWith("/assets/")) {
         return addSecurityHeaders(await serveAsset(env, request), path);
       }
@@ -1959,16 +1965,9 @@ export default {
 
       if (path === "/_worker.js") return addSecurityHeaders(new Response("Not found", { status: 404 }), path);
 
-      // Les anciennes URL .html sont normalisées une seule fois.
-      // La page finale /login est servie depuis une ressource .page interne,
-      // donc env.ASSETS ne peut plus déclencher de redirection HTML inverse.
+      // Les anciennes URL HTML restantes sont normalisées une seule fois.
       if (path === "/index.html") {
         const canonical = new URL("/", url);
-        canonical.search = url.search;
-        return Response.redirect(canonical, 308);
-      }
-      if (path === "/login.html") {
-        const canonical = new URL("/login", url);
         canonical.search = url.search;
         return Response.redirect(canonical, 308);
       }
@@ -1993,18 +1992,11 @@ export default {
         );
       }
 
-      if (path === "/login") {
-        if (auth) return Response.redirect(new URL("/app", url), 303);
-        return addSecurityHeaders(
-          await serveInternalHtml(env, request, "/internal-pages/login.page"),
-          "/login"
-        );
-      }
-
       if (!auth) {
-        const loginUrl = new URL("/login", url);
-        loginUrl.searchParams.set("next", `${path}${url.search}`);
-        return Response.redirect(loginUrl, 303);
+        const homeUrl = new URL("/", url);
+        homeUrl.searchParams.set("auth", "login");
+        homeUrl.searchParams.set("next", `${path}${url.search}`);
+        return Response.redirect(homeUrl, 303);
       }
 
       if (path === "/plan-expired") {

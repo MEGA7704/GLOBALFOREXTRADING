@@ -3,14 +3,12 @@ import { join } from "node:path";
 
 const required = [
   "public/internal-pages/home.page",
-  "public/internal-pages/login.page",
   "public/internal-pages/app.page",
   "public/internal-pages/plan-expired.page",
   "public/_worker.js",
   "public/assets/home.css",
   "public/assets/home.js",
   "public/assets/login.css",
-  "public/assets/login.js",
   "public/assets/cloud-shell.css",
   "public/assets/cloud-shell.js",
   "migrations/0002_security_multitenancy.sql",
@@ -55,7 +53,6 @@ for (const expected of [
   "STANDARD_PRICE_FCFA",
   "ensureDatabaseSchema",
   'serveInternalHtml(env, request, "/internal-pages/home.page")',
-  'serveInternalHtml(env, request, "/internal-pages/login.page")',
   'serveInternalHtml(env, request, "/internal-pages/app.page")',
   'serveInternalHtml(env, request, "/internal-pages/plan-expired.page")',
   'path.startsWith("/internal-pages/")'
@@ -71,6 +68,8 @@ await rm("public/_redirects", { force: true });
 await rm("public/login.html", { force: true });
 await rm("public/plan-expired.html", { force: true });
 await rm("public/index.html", { force: true });
+await rm("public/internal-pages/login.page", { force: true });
+await rm("public/assets/login.js", { force: true });
 
 try { await access("public/index.html"); throw new Error("L’ancienne page d’accueil public/index.html ne doit plus être présente."); } catch (error) { if (error && error.message && error.message.includes("ancienne page")) throw error; }
 
@@ -84,14 +83,21 @@ for (const expected of [
   "30 jours",
   "365 jours",
   "20 600 FCFA",
-  "100 600 FCFA"
+  "100 600 FCFA",
+  'id="loginDialog"',
+  'id="registerDialog"',
+  'data-auth="login"',
+  'data-auth="register"'
 ]) {
   if (!homePage.includes(expected)) throw new Error(`Page d’accueil incomplète : ${expected}`);
 }
 
-const loginPage = await readFile("public/internal-pages/login.page", "utf8");
-for (const expected of ["showRegisterButton", "registerDialog", "registerForm", "Créer mon compte", "7 jours", "showForgotPasswordButton", "forgotPasswordDialog"]) {
-  if (!loginPage.includes(expected)) throw new Error(`Interface de connexion/inscription incomplète : ${expected}`);
+const homeScript = await readFile("public/assets/home.js", "utf8");
+for (const expected of ["/api/login", "/api/register", "/api/password-reset-request", "openDialog", "registerDialog", "loginDialog"]) {
+  if (!homeScript.includes(expected)) throw new Error(`Authentification popup incomplète : ${expected}`);
+}
+if (await readFile("public/internal-pages/home.page", "utf8").then(v => !v.includes('id="loginDialog"') || !v.includes('id="registerDialog"'))) {
+  throw new Error("Les popups Connexion / Inscription doivent être intégrés à la page d’accueil.");
 }
 
 const appPage = await readFile("public/internal-pages/app.page", "utf8");
@@ -113,11 +119,6 @@ for (const expected of [
   if (!shellScript.includes(expected)) throw new Error(`Gestion des plans ou des rôles incomplète : ${expected}`);
 }
 
-const loginScript = await readFile("public/assets/login.js", "utf8");
-for (const expected of ["/api/register", "/api/password-reset-request", "showModal", "clearRegistrationFields", "SUPER_ADMIN_EMAIL_RESERVED"]) {
-  if (!loginScript.includes(expected)) throw new Error(`Fonction de connexion manquante : ${expected}`);
-}
-if (!loginScript.includes('get("register") === "1"')) throw new Error("Ouverture directe du formulaire d’inscription depuis l’accueil manquante.");
 
 async function collectFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -138,4 +139,4 @@ for (const file of browserFiles) {
   if (/localStorage\s*\./.test(content)) throw new Error(`Utilisation de localStorage détectée : ${file}`);
 }
 
-console.log("Vérification réussie : accueil public, trois plans, sécurité et interfaces conformes.");
+console.log("Vérification réussie : accueil public, authentification en popup, trois plans et sécurité conformes.");

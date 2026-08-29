@@ -8,8 +8,6 @@
 /assets/login.css
   Cache-Control: no-store, max-age=0
 
-/assets/login.js
-  Cache-Control: no-store, max-age=0
 
 /assets/*
   Cache-Control: public, max-age=86400

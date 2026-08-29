@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <meta name="description" content="GLOBAL FOREX TRADING — plateforme sécurisée d’analyse de captures Forex."/>
   <title>GLOBAL FOREX TRADING — Forex Capture Analyzer Edition</title>
-  <link rel="stylesheet" href="/assets/home.css?v=2.11.0"/>
+  <link rel="stylesheet" href="/assets/home.css?v=2.12.0"/>
 </head>
 <body>
   <header class="site-header">
@@ -19,8 +19,8 @@
       </span>
     </a>
     <nav class="top-actions" aria-label="Accès au compte">
-      <a class="btn btn-ghost" id="loginLink" href="/login?next=%2Fapp">Connexion</a>
-      <a class="btn btn-primary" id="registerLink" href="/login?register=1&amp;next=%2Fapp"><span class="user-icon">♙</span>S’inscrire</a>
+      <a class="btn btn-ghost" id="loginLink" data-auth="login" href="/?auth=login&amp;next=%2Fapp">Connexion</a>
+      <a class="btn btn-primary" id="registerLink" data-auth="register" href="/?auth=register&amp;next=%2Fapp"><span class="user-icon">♙</span>S’inscrire</a>
     </nav>
   </header>
 
@@ -31,8 +31,8 @@
         <h1>Analysez vos captures <span>Forex avec précision</span></h1>
         <p>Détectez les tendances, identifiez les zones clés et facilitez vos prises de décision grâce à des indicateurs visuels professionnels.</p>
         <div class="hero-actions">
-          <a class="btn btn-primary btn-large" id="startAnalysis" href="/login?next=%2Fapp">↗ &nbsp; Commencer l’analyse</a>
-          <a class="btn btn-ghost btn-large" href="/login?next=%2Fapp">♙ &nbsp; Se connecter</a>
+          <a class="btn btn-primary btn-large" id="startAnalysis" data-auth="login" href="/?auth=login&amp;next=%2Fapp">↗ &nbsp; Commencer l’analyse</a>
+          <a class="btn btn-ghost btn-large" data-auth="login" href="/?auth=login&amp;next=%2Fapp">♙ &nbsp; Se connecter</a>
         </div>
         <div class="trust-row" aria-label="Avantages">
           <span>ϟ <b>Rapide &amp; précis</b></span>
@@ -87,7 +87,7 @@
             <span class="tag tag-support">SUPPORT</span>
           </div>
           <aside class="analysis-panel">
-            <article class="success-card"><span class="check">✓</span><div><b>Analyse terminée</b><small>Votre capture a été analysée avec succès.</small><a href="/login?next=%2Fapp">Voir le rapport détaillé →</a></div></article>
+            <article class="success-card"><span class="check">✓</span><div><b>Analyse terminée</b><small>Votre capture a été analysée avec succès.</small><a data-auth="login" href="/?auth=login&amp;next=%2Fapp">Voir le rapport détaillé →</a></div></article>
             <article class="score-card"><b>Score de tendance</b><div class="score-wrap"><span class="score-ring">78%</span><div><strong>Tendance haussière</strong><small>Forte probabilité de continuation</small></div></div></article>
             <article class="key-card"><b>Indicateurs clés</b><dl><dt>Tendance</dt><dd>Haussière ↗</dd><dt>Force</dt><dd>Forte</dd><dt>Volatilité</dt><dd>Modérée</dd><dt>Confiance</dt><dd>Élevée ⊙</dd></dl></article>
             <article class="last-card"><b>Dernière analyse</b><small>Interface de démonstration</small></article>
@@ -105,7 +105,7 @@
     <section class="pricing page-shell" id="plans">
       <div class="section-heading"><span>FORMULES D’ACCÈS</span><h2>Choisissez la durée adaptée à votre utilisation</h2><p>Tous les plans donnent accès aux fonctionnalités de l’application pendant leur durée de validité.</p></div>
       <div class="pricing-grid">
-        <article class="plan-card free"><div class="plan-top"><span>FREE</span><b>0 FCFA</b><small>7 jours</small></div><ul><li>Accès complet à l’application</li><li>Analyse des captures Forex</li><li>Historique et outils graphiques</li></ul><a class="btn btn-ghost" href="/login?register=1&amp;next=%2Fapp">Commencer gratuitement</a></article>
+        <article class="plan-card free"><div class="plan-top"><span>FREE</span><b>0 FCFA</b><small>7 jours</small></div><ul><li>Accès complet à l’application</li><li>Analyse des captures Forex</li><li>Historique et outils graphiques</li></ul><a class="btn btn-ghost" data-auth="register" href="/?auth=register&amp;next=%2Fapp">Commencer gratuitement</a></article>
         <article class="plan-card standard"><div class="recommended">FORMULE FLEXIBLE</div><div class="plan-top"><span>STANDARD</span><b>20 600 FCFA</b><small>30 jours</small></div><ul><li>Accès complet pendant 30 jours</li><li>Toutes les fonctions d’analyse</li><li>Compte membre sécurisé</li></ul><a class="btn btn-primary" href="https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=20600" target="_blank" rel="noopener noreferrer">Choisir Standard</a></article>
         <article class="plan-card business"><div class="recommended">MEILLEURE DURÉE</div><div class="plan-top"><span>BUSINESS</span><b>100 600 FCFA</b><small>365 jours</small></div><ul><li>Accès complet pendant 365 jours</li><li>Continuité d’utilisation annuelle</li><li>Toutes les fonctions de l’application</li></ul><a class="btn btn-primary" href="https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=100600" target="_blank" rel="noopener noreferrer">Choisir Business</a></article>
       </div>
@@ -165,6 +165,101 @@
       <span>GLOBAL FOREX TRADING · Côte d’Ivoire</span>
     </div>
   </footer>
+
+  <dialog id="loginDialog" class="auth-popup" aria-labelledby="loginDialogTitle">
+    <div class="auth-popup__shell">
+      <header class="auth-popup__head">
+        <div>
+          <span class="auth-popup__kicker">ESPACE SÉCURISÉ</span>
+          <h2 id="loginDialogTitle">Connexion</h2>
+          <p>Accédez à votre espace personnel.</p>
+        </div>
+        <button class="auth-popup__close" type="button" data-auth-close="login" aria-label="Fermer">×</button>
+      </header>
+      <div id="authAlert" class="auth-alert" role="alert" hidden></div>
+      <form id="loginForm" class="auth-form" autocomplete="on">
+        <label class="auth-field">Adresse e-mail
+          <input id="loginEmail" name="email" type="email" autocomplete="username" required maxlength="180" placeholder="votre@email.com"/>
+        </label>
+        <label class="auth-field">Mot de passe
+          <span class="auth-password"><input id="loginPassword" name="password" type="password" autocomplete="current-password" required minlength="10" maxlength="128" placeholder="Votre mot de passe"/><button type="button" data-toggle-password="loginPassword" aria-label="Afficher le mot de passe">◉</button></span>
+        </label>
+        <button class="auth-submit" id="loginButton" type="submit"><span>Se connecter</span><i>→</i></button>
+      </form>
+      <div class="auth-popup__links">
+        <button type="button" id="showForgotPasswordButton">Mot de passe oublié ?</button>
+        <span>Pas encore membre ?</span>
+        <button type="button" id="showRegisterFromLogin">S’inscrire</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="registerDialog" class="auth-popup auth-popup--wide" aria-labelledby="registerDialogTitle">
+    <div class="auth-popup__shell">
+      <header class="auth-popup__head">
+        <div>
+          <span class="auth-popup__kicker">ESPACE MEMBRE</span>
+          <h2 id="registerDialogTitle">Créer votre compte</h2>
+          <p>Accès complet offert pendant 7 jours avec le plan Free.</p>
+        </div>
+        <button class="auth-popup__close" type="button" data-auth-close="register" aria-label="Fermer">×</button>
+      </header>
+      <div id="registerAlert" class="auth-alert" role="alert" hidden></div>
+      <form id="registerForm" class="auth-form" autocomplete="off">
+        <div class="auth-grid">
+          <label class="auth-field">Nom et prénoms
+            <input id="registerName" name="name" type="text" autocomplete="name" required minlength="2" maxlength="100" placeholder="Votre nom complet"/>
+          </label>
+          <label class="auth-field">Contact
+            <input id="registerContact" name="companyName" type="tel" autocomplete="tel" required minlength="2" maxlength="140" placeholder="Votre contact"/>
+          </label>
+          <label class="auth-field auth-field--full">Adresse e-mail du membre
+            <input id="registerEmail" name="memberRegistrationEmail" type="email" autocomplete="off" autocapitalize="none" spellcheck="false" data-lpignore="true" data-1p-ignore="true" required maxlength="180" placeholder="membre@email.com"/>
+          </label>
+          <label class="auth-field">Mot de passe
+            <span class="auth-password"><input id="registerPassword" name="password" type="password" autocomplete="new-password" required minlength="12" maxlength="128" placeholder="12 caractères minimum"/><button type="button" data-toggle-password="registerPassword" aria-label="Afficher le mot de passe">◉</button></span>
+          </label>
+          <label class="auth-field">Confirmer le mot de passe
+            <span class="auth-password"><input id="registerPasswordConfirm" name="passwordConfirm" type="password" autocomplete="new-password" required minlength="12" maxlength="128" placeholder="Répétez le mot de passe"/><button type="button" data-toggle-password="registerPasswordConfirm" aria-label="Afficher le mot de passe">◉</button></span>
+          </label>
+        </div>
+        <div class="auth-rule"><b>Exigences de sécurité</b><span>12 caractères minimum, avec une majuscule, une minuscule, un chiffre et un caractère spécial.</span></div>
+        <div class="auth-dialog-actions">
+          <button class="auth-cancel" type="button" data-auth-close="register">Annuler</button>
+          <button class="auth-submit" id="registerButton" type="submit"><span>Créer mon compte</span><i>→</i></button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog id="forgotPasswordDialog" class="auth-popup" aria-labelledby="forgotPasswordDialogTitle">
+    <div class="auth-popup__shell">
+      <header class="auth-popup__head">
+        <div>
+          <span class="auth-popup__kicker">ASSISTANCE COMPTE</span>
+          <h2 id="forgotPasswordDialogTitle">Demande de réinitialisation</h2>
+          <p>Transmettez une demande sécurisée au Super Admin.</p>
+        </div>
+        <button class="auth-popup__close" type="button" data-auth-close="forgot" aria-label="Fermer">×</button>
+      </header>
+      <div id="forgotPasswordAlert" class="auth-alert" role="alert" hidden></div>
+      <form id="forgotPasswordForm" class="auth-form" autocomplete="off">
+        <label class="auth-field">Nom et prénoms
+          <input id="forgotPasswordName" name="name" type="text" autocomplete="name" maxlength="100" placeholder="Votre nom complet"/>
+        </label>
+        <label class="auth-field">Adresse e-mail du compte
+          <input id="forgotPasswordEmail" name="email" type="email" autocomplete="email" required maxlength="180" placeholder="votre@email.com"/>
+        </label>
+        <label class="auth-field">Précision complémentaire <small>(facultatif)</small>
+          <textarea id="forgotPasswordMessage" name="message" maxlength="500" rows="4" placeholder="Ajoutez une précision utile pour le Super Admin."></textarea>
+        </label>
+        <div class="auth-dialog-actions">
+          <button class="auth-cancel" type="button" data-auth-close="forgot">Annuler</button>
+          <button class="auth-submit" id="forgotPasswordSubmitButton" type="submit"><span>Envoyer la demande</span><i>→</i></button>
+        </div>
+      </form>
+    </div>
+  </dialog>
 
   <div class="legal-modal" id="legalModal" aria-hidden="true">
     <div class="legal-backdrop" data-legal-close></div>
@@ -232,6 +327,6 @@
     </div>
   </template>
 
-  <script src="/assets/home.js?v=2.11.0" defer></script>
+  <script src="/assets/home.js?v=2.12.0" defer></script>
 </body>
 </html>

@@ -235,3 +235,7 @@ Le Worker initialise aussi automatiquement cette table lors du premier appel apr
 - L’ancienne page `public/index.html` a été supprimée définitivement.
 - La racine `/` est servie uniquement par `public/internal-pages/home.page`.
 - `/index.html` redirige vers `/` sans conserver une seconde page d’accueil.
+
+## V17 — Connexion et inscription en popup
+
+La page d’accueil est désormais l’unique point d’entrée public. Tous les boutons de connexion et d’inscription ouvrent un popup sur cette page. Les anciennes URL `/login` et `/login.html` redirigent vers l’accueil avec ouverture automatique du popup correspondant. L’ancienne page autonome de connexion a été supprimée.
