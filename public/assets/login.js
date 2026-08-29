@@ -45,8 +45,8 @@
   }
 
   function safeNext() {
-    const next = new URLSearchParams(location.search).get("next") || "/";
-    return next.startsWith("/") && !next.startsWith("//") ? next : "/";
+    const next = new URLSearchParams(location.search).get("next") || "/app";
+    return next.startsWith("/") && !next.startsWith("//") ? next : "/app";
   }
 
   async function refreshCsrf() {
@@ -172,7 +172,7 @@
           passwordConfirm
         })
       });
-      showAlert(registerAlert, "Compte créé. Votre plan Free de 21 jours est activé…", "success");
+      showAlert(registerAlert, "Compte créé. Votre plan Free de 7 jours est activé…", "success");
       window.setTimeout(() => location.replace(safeNext()), 450);
     } catch (error) {
       if (error.status === 403) {
@@ -252,4 +252,7 @@
 
   $("currentYear").textContent = new Date().getFullYear();
   loadStatus();
+  if (new URLSearchParams(location.search).get("register") === "1") {
+    window.setTimeout(openRegisterDialog, 120);
+  }
 })();

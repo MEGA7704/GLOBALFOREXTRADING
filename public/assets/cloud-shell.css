@@ -823,3 +823,13 @@ input[type="url"] {
   .password-reset-request-card { grid-template-columns: 1fr; }
   .password-reset-request-actions { grid-column: auto; display: grid; }
 }
+
+/* V14 — plans Free / Standard / Business */
+.cloud-upgrade__grid.cloud-upgrade__grid--three { grid-template-columns: repeat(3, minmax(0,1fr)); }
+.cloud-upgrade__grid article .primary { width: 100%; margin-top: 12px; }
+.admin-summary { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.admin-account-plan.standard { border-color: rgba(72,141,208,.34); background: rgba(45,91,138,.10); }
+@media (max-width: 980px) {
+  .cloud-upgrade__grid.cloud-upgrade__grid--three { grid-template-columns: 1fr; }
+  .admin-summary { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}

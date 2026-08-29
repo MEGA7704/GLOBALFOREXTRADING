@@ -20,7 +20,7 @@ SELECT
   CASE WHEN trim(name) = '' THEN 'Entreprise migrée' ELSE trim(name) END,
   'free',
   COALESCE(created_at, datetime('now')),
-  datetime(COALESCE(created_at, datetime('now')), '+21 days'),
+  datetime(COALESCE(created_at, datetime('now')), '+7 days'),
   CASE WHEN is_active = 1 THEN 'active' ELSE 'disabled' END,
   COALESCE(created_at, datetime('now')),
   COALESCE(updated_at, datetime('now'))

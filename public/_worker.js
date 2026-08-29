@@ -9,12 +9,16 @@ const REGISTER_MAX_ATTEMPTS = 3;
 const PASSWORD_RESET_MAX_ATTEMPTS = 3;
 const PBKDF2_ITERATIONS = 100000;
 const PBKDF2_MAX_SUPPORTED_ITERATIONS = 100000;
-const FREE_PLAN_DAYS = 21;
+const FREE_PLAN_DAYS = 7;
+const STANDARD_PLAN_DAYS = 30;
 const BUSINESS_PLAN_DAYS = 365;
-const PAYMENT_URL = "https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=365000";
+const STANDARD_PRICE_FCFA = 20600;
+const BUSINESS_PRICE_FCFA = 100600;
+const STANDARD_PAYMENT_URL = "https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=20600";
+const BUSINESS_PAYMENT_URL = "https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=100600";
 const APP_STATE_MAX_BYTES = 350000;
 
-const APP_SCHEMA_VERSION = 4;
+const APP_SCHEMA_VERSION = 5;
 
 const FINAL_TABLE_STATEMENTS = [
   `CREATE TABLE IF NOT EXISTS app_schema_meta (
@@ -31,6 +35,14 @@ const FINAL_TABLE_STATEMENTS = [
     status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','disabled')),
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS company_subscriptions (
+    company_id TEXT PRIMARY KEY,
+    plan_code TEXT NOT NULL DEFAULT 'free' CHECK (plan_code IN ('free','standard','business')),
+    plan_started_at TEXT NOT NULL,
+    plan_expires_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
   )`,
   `CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
@@ -113,6 +125,7 @@ const FINAL_TABLE_STATEMENTS = [
 
 const FINAL_INDEX_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS idx_companies_status_plan ON companies(status, plan_expires_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_company_subscriptions_plan ON company_subscriptions(plan_code, plan_expires_at)`,
   `CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`,
   `CREATE INDEX IF NOT EXISTS idx_users_company ON users(company_id, is_active)`,
   `CREATE INDEX IF NOT EXISTS idx_password_reset_status_date ON password_reset_requests(status, created_at DESC)`,
@@ -330,11 +343,27 @@ function addDays(date, days) {
 }
 
 function planDurationDays(planCode) {
-  return planCode === "business" ? BUSINESS_PLAN_DAYS : FREE_PLAN_DAYS;
+  if (planCode === "business") return BUSINESS_PLAN_DAYS;
+  if (planCode === "standard") return STANDARD_PLAN_DAYS;
+  return FREE_PLAN_DAYS;
 }
 
 function planLabel(planCode) {
-  return planCode === "business" ? "Business" : "Free";
+  if (planCode === "business") return "Business";
+  if (planCode === "standard") return "Standard";
+  return "Free";
+}
+
+function planPriceFcfa(planCode) {
+  if (planCode === "business") return BUSINESS_PRICE_FCFA;
+  if (planCode === "standard") return STANDARD_PRICE_FCFA;
+  return 0;
+}
+
+function planPaymentUrl(planCode) {
+  if (planCode === "business") return BUSINESS_PAYMENT_URL;
+  if (planCode === "standard") return STANDARD_PAYMENT_URL;
+  return null;
 }
 
 function computePlan(company) {
@@ -351,7 +380,9 @@ function computePlan(company) {
     status: company.status,
     active: company.status === "active" && expiresAt > now,
     daysRemaining,
-    paymentUrl: PAYMENT_URL
+    durationDays: planDurationDays(company.plan_code),
+    priceFcfa: planPriceFcfa(company.plan_code),
+    paymentUrl: planPaymentUrl(company.plan_code)
   };
 }
 
@@ -394,6 +425,18 @@ async function createFinalSchema(db) {
   const now = new Date().toISOString();
   await db.batch([
     ...schemaStatements(db, FINAL_TABLE_STATEMENTS),
+    db.prepare(`
+      INSERT OR IGNORE INTO company_subscriptions (
+        company_id, plan_code, plan_started_at, plan_expires_at, updated_at
+      )
+      SELECT
+        id,
+        CASE WHEN plan_code = 'business' THEN 'business' ELSE 'free' END,
+        plan_started_at,
+        plan_expires_at,
+        updated_at
+      FROM companies
+    `),
     ...schemaStatements(db, FINAL_INDEX_STATEMENTS),
     db.prepare(`
       INSERT INTO app_schema_meta (name, version, updated_at)
@@ -434,12 +477,19 @@ async function migrateLegacySchema(db) {
       CASE WHEN trim(name) = '' THEN 'Entreprise migrée' ELSE trim(name) END,
       'free',
       COALESCE(created_at, ?),
-      datetime(COALESCE(created_at, ?), '+21 days'),
+      datetime(COALESCE(created_at, ?), '+7 days'),
       CASE WHEN is_active = 1 THEN 'active' ELSE 'disabled' END,
       COALESCE(created_at, ?),
       COALESCE(updated_at, ?)
     FROM ${legacyUsers}
   `).bind(now, now, now, now));
+  statements.push(db.prepare(`
+    INSERT OR IGNORE INTO company_subscriptions (
+      company_id, plan_code, plan_started_at, plan_expires_at, updated_at
+    )
+    SELECT id, 'free', plan_started_at, plan_expires_at, updated_at
+    FROM companies
+  `));
   statements.push(db.prepare(`
     INSERT OR IGNORE INTO users (
       id, company_id, name, email, role, is_active, session_version,
@@ -518,7 +568,7 @@ async function migrateLegacySchema(db) {
 
 async function verifyFinalSchema(db) {
   const requiredTables = [
-    "companies", "users", "password_credentials", "password_reset_requests", "analyses",
+    "companies", "company_subscriptions", "users", "password_credentials", "password_reset_requests", "analyses",
     "audit_logs", "company_data", "app_schema_meta"
   ];
   const placeholders = requiredTables.map(() => "?").join(",");
@@ -670,10 +720,14 @@ async function getAuth(env, request) {
     SELECT
       u.id, u.company_id, u.name, u.email, u.role, u.is_active,
       u.session_version, u.deleted_at,
-      c.id AS c_id, c.name AS c_name, c.plan_code, c.plan_started_at,
-      c.plan_expires_at, c.status AS company_status
+      c.id AS c_id, c.name AS c_name,
+      COALESCE(s.plan_code, c.plan_code) AS plan_code,
+      COALESCE(s.plan_started_at, c.plan_started_at) AS plan_started_at,
+      COALESCE(s.plan_expires_at, c.plan_expires_at) AS plan_expires_at,
+      c.status AS company_status
     FROM users u
     LEFT JOIN companies c ON c.id = u.company_id
+    LEFT JOIN company_subscriptions s ON s.company_id = c.id
     WHERE u.id = ?
     LIMIT 1
   `).bind(session.userId).first();
@@ -993,6 +1047,11 @@ async function handleRegister(env, request) {
           id, name, plan_code, plan_started_at, plan_expires_at, status, created_at, updated_at
         ) VALUES (?, ?, 'free', ?, ?, 'active', ?, ?)
       `).bind(companyId, companyName, nowIso, expiresAt, nowIso, nowIso),
+      env.FOREX_D1.prepare(`
+        INSERT INTO company_subscriptions (
+          company_id, plan_code, plan_started_at, plan_expires_at, updated_at
+        ) VALUES (?, 'free', ?, ?, ?)
+      `).bind(companyId, nowIso, expiresAt, nowIso),
       env.FOREX_D1.prepare(`
         INSERT INTO users (
           id, company_id, name, email, role, is_active, session_version, created_at, updated_at
@@ -1410,10 +1469,14 @@ async function listAdminAccounts(env, auth) {
     SELECT
       u.id, u.name, u.email, u.is_active, u.last_login_at, u.created_at,
       u.updated_at, u.company_id,
-      c.name AS company_name, c.plan_code, c.plan_started_at,
-      c.plan_expires_at, c.status AS company_status
+      c.name AS company_name,
+      COALESCE(s.plan_code, c.plan_code) AS plan_code,
+      COALESCE(s.plan_started_at, c.plan_started_at) AS plan_started_at,
+      COALESCE(s.plan_expires_at, c.plan_expires_at) AS plan_expires_at,
+      c.status AS company_status
     FROM users u
     JOIN companies c ON c.id = u.company_id
+    LEFT JOIN company_subscriptions s ON s.company_id = c.id
     WHERE u.role = 'member' AND u.deleted_at IS NULL
     ORDER BY u.created_at DESC
   `).all();
@@ -1446,7 +1509,8 @@ async function createAdminAccount(env, request, auth) {
   const companyName = safeText(body.companyName, 140);
   const email = validateEmail(body.email);
   const password = validatePassword(body.password);
-  const planCode = body.planCode === "business" ? "business" : "free";
+  const planCode = ["free", "standard", "business"].includes(body.planCode) ? body.planCode : "free";
+  const legacyPlanCode = planCode === "business" ? "business" : "free";
   if (name.length < 2 || companyName.length < 2) throw new Error("Nom du membre ou de l’entreprise invalide.");
   const existing = await env.FOREX_D1.prepare("SELECT id FROM users WHERE email = ? LIMIT 1").bind(email).first();
   if (existing) {
@@ -1465,7 +1529,12 @@ async function createAdminAccount(env, request, auth) {
       INSERT INTO companies (
         id, name, plan_code, plan_started_at, plan_expires_at, status, created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, 'active', ?, ?)
-    `).bind(companyId, companyName, planCode, nowIso, expiresAt, nowIso, nowIso),
+    `).bind(companyId, companyName, legacyPlanCode, nowIso, expiresAt, nowIso, nowIso),
+    env.FOREX_D1.prepare(`
+      INSERT INTO company_subscriptions (
+        company_id, plan_code, plan_started_at, plan_expires_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?)
+    `).bind(companyId, planCode, nowIso, expiresAt, nowIso),
     env.FOREX_D1.prepare(`
       INSERT INTO users (
         id, company_id, name, email, role, is_active, session_version, created_at, updated_at
@@ -1558,7 +1627,7 @@ async function setAdminAccountPlan(env, request, auth, userId) {
   requireRole(auth, "super_admin");
   assertCsrf(request);
   const body = await readJson(request, 5000);
-  const planCode = body.planCode === "business" ? "business" : body.planCode === "free" ? "free" : null;
+  const planCode = ["free", "standard", "business"].includes(body.planCode) ? body.planCode : null;
   if (!planCode) throw new Error("Plan invalide.");
   const target = await env.FOREX_D1.prepare(`
     SELECT id, company_id, role FROM users WHERE id = ? AND deleted_at IS NULL LIMIT 1
@@ -1571,11 +1640,24 @@ async function setAdminAccountPlan(env, request, auth, userId) {
   const now = new Date();
   const startedAt = now.toISOString();
   const expiresAt = addDays(now, planDurationDays(planCode));
-  await env.FOREX_D1.prepare(`
-    UPDATE companies
-    SET plan_code = ?, plan_started_at = ?, plan_expires_at = ?, status = 'active', updated_at = ?
-    WHERE id = ?
-  `).bind(planCode, startedAt, expiresAt, startedAt, target.company_id).run();
+  const legacyPlanCode = planCode === "business" ? "business" : "free";
+  await env.FOREX_D1.batch([
+    env.FOREX_D1.prepare(`
+      INSERT INTO company_subscriptions (
+        company_id, plan_code, plan_started_at, plan_expires_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(company_id) DO UPDATE SET
+        plan_code = excluded.plan_code,
+        plan_started_at = excluded.plan_started_at,
+        plan_expires_at = excluded.plan_expires_at,
+        updated_at = excluded.updated_at
+    `).bind(target.company_id, planCode, startedAt, expiresAt, startedAt),
+    env.FOREX_D1.prepare(`
+      UPDATE companies
+      SET plan_code = ?, plan_started_at = ?, plan_expires_at = ?, status = 'active', updated_at = ?
+      WHERE id = ?
+    `).bind(legacyPlanCode, startedAt, expiresAt, startedAt, target.company_id)
+  ]);
   await audit(env, request, {
     actorUserId: auth.user.id,
     targetUserId: userId,
@@ -1849,6 +1931,18 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
     try {
+      // La vitrine publique et ses ressources restent disponibles même si les bindings
+      // cloud sont temporairement indisponibles.
+      if (path === "/") {
+        return addSecurityHeaders(
+          await serveInternalHtml(env, request, "/internal-pages/home.page"),
+          "/"
+        );
+      }
+      if (PUBLIC_ASSETS.has(path) || path.startsWith("/assets/")) {
+        return addSecurityHeaders(await serveAsset(env, request), path);
+      }
+
       if (!env.FOREX_KV || !env.FOREX_D1) {
         return addSecurityHeaders(json({ error: "Bindings FOREX_KV ou FOREX_D1 manquants." }, 503), path);
       }
@@ -1868,6 +1962,11 @@ export default {
       // Les anciennes URL .html sont normalisées une seule fois.
       // La page finale /login est servie depuis une ressource .page interne,
       // donc env.ASSETS ne peut plus déclencher de redirection HTML inverse.
+      if (path === "/index.html") {
+        const canonical = new URL("/", url);
+        canonical.search = url.search;
+        return Response.redirect(canonical, 308);
+      }
       if (path === "/login.html") {
         const canonical = new URL("/login", url);
         canonical.search = url.search;
@@ -1887,8 +1986,15 @@ export default {
       const isPublicAsset = PUBLIC_ASSETS.has(path) || path.startsWith("/assets/");
       if (isPublicAsset) return addSecurityHeaders(await serveAsset(env, request), path);
 
+      if (path === "/") {
+        return addSecurityHeaders(
+          await serveInternalHtml(env, request, "/internal-pages/home.page"),
+          "/"
+        );
+      }
+
       if (path === "/login") {
-        if (auth) return Response.redirect(new URL("/", url), 303);
+        if (auth) return Response.redirect(new URL("/app", url), 303);
         return addSecurityHeaders(
           await serveInternalHtml(env, request, "/internal-pages/login.page"),
           "/login"
@@ -1915,7 +2021,12 @@ export default {
         return Response.redirect(new URL("/plan-expired", url), 303);
       }
 
-      if (path === "/app") return Response.redirect(new URL("/", url), 303);
+      if (path === "/app") {
+        return addSecurityHeaders(
+          await serveInternalHtml(env, request, "/internal-pages/app.page"),
+          "/app"
+        );
+      }
       return addSecurityHeaders(await serveAsset(env, request), path);
     } catch (error) {
       const status = Number(error.status || 400);

@@ -7,7 +7,9 @@ await rm("public/plan-expired.html", { force: true });
 
 const required = [
   "public/index.html",
+  "public/internal-pages/home.page",
   "public/internal-pages/login.page",
+  "public/internal-pages/app.page",
   "public/internal-pages/plan-expired.page",
   "public/_worker.js",
   "public/assets/cloud-shell.js",
@@ -16,6 +18,7 @@ const required = [
   "migrations/0002_security_multitenancy.sql",
   "migrations/0003_runtime_schema_meta.sql",
   "migrations/0004_password_reset_requests.sql",
+  "migrations/0005_subscription_plans_v14.sql",
   "wrangler.toml"
 ];
 
@@ -26,7 +29,7 @@ for (const route of ["/api/login", "/api/register", "/api/password-reset-request
 }
 await writeFile("public/build-info.json", JSON.stringify({
   name: "GLOBAL FOREX TRADING",
-  version: "2.8.0",
+  version: "2.9.0",
   architecture: "Cloudflare Pages Advanced Mode",
   buildAt: new Date().toISOString()
 }, null, 2));

@@ -28,8 +28,11 @@ Elles sont déjà déclarées dans `wrangler.toml` :
 
 ```text
 SUPER_ADMIN_EMAIL=mega@services.local
-FREE_PLAN_DAYS=21
+FREE_PLAN_DAYS=7
+STANDARD_PLAN_DAYS=30
 BUSINESS_PLAN_DAYS=365
+STANDARD_PRICE_FCFA=20600
+BUSINESS_PRICE_FCFA=100600
 ```
 
 ## Secrets obligatoires

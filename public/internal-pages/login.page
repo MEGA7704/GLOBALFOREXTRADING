@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <meta name="description" content="Connexion sécurisée à GLOBAL FOREX TRADING — Forex Capture Analyzer Edition"/>
   <title>Connexion — GLOBAL FOREX TRADING</title>
-  <link rel="stylesheet" href="/assets/login.css?v=2.7.0"/>
+  <link rel="stylesheet" href="/assets/login.css?v=2.9.0"/>
 </head>
 <body>
   <main class="auth-layout">
@@ -65,7 +65,7 @@
         <div class="dialog-title-wrap dialog-title-wrap--centered">
           <span class="dialog-kicker">ESPACE MEMBRE</span>
           <h2 id="registerDialogTitle">Créer votre compte</h2>
-          <p>Accès complet offert pendant 21 jours avec le plan Free.</p>
+          <p>Accès complet offert pendant 7 jours avec le plan Free.</p>
         </div>
         <button class="dialog-close" id="closeRegisterDialog" type="button" aria-label="Fermer">×</button>
       </header>
@@ -140,6 +140,6 @@
     </div>
   </dialog>
 
-  <script src="/assets/login.js?v=2.7.0" defer></script>
+  <script src="/assets/login.js?v=2.9.0" defer></script>
 </body>
 </html>

@@ -1,5 +1,17 @@
 # GLOBAL FOREX TRADING — Version 2.7.0
 
+## Page d’accueil publique
+
+La racine `/` affiche désormais une page d’accueil professionnelle et responsive. Le bouton **Commencer l’analyse** ouvre `/app` si une session existe, sinon la connexion. Le bouton **S’inscrire** ouvre directement le formulaire d’inscription.
+
+### Formules
+
+- **Free** : 7 jours — **0 FCFA** ;
+- **Standard** : 30 jours — **20 600 FCFA** ;
+- **Business** : 365 jours — **100 600 FCFA**.
+
+Les nouveaux comptes sont créés en Free. Les changements de formule restent contrôlés côté serveur et par le Super Admin.
+
 ## Correction V8
 
 L’inscription membre vide désormais ses champs à chaque ouverture et empêche le navigateur de recopier l’adresse du Super Admin. Seule l’adresse exacte configurée dans `SUPER_ADMIN_EMAIL` est réservée ; toutes les autres adresses valides peuvent créer un compte membre.
@@ -12,7 +24,7 @@ La page de connexion utilise une fenêtre modale : le formulaire d’inscription
 
 ## Inscription autonome des membres — version 2.3.0
 
-La page de connexion comporte désormais un bouton **S’inscrire** placé à côté de **Se connecter**. Un membre peut créer son compte avec son nom, son entreprise ou activité, son adresse e-mail et un mot de passe robuste. La route serveur `POST /api/register` crée exclusivement un rôle `member`, une entreprise isolée et un plan **Free de 21 jours**, puis ouvre une session sécurisée. Le rôle, le statut et le plan ne sont jamais choisis par le navigateur. Les inscriptions sont limitées à trois tentatives par adresse IP et par e-mail sur une période de quinze minutes.
+La page de connexion comporte désormais un bouton **S’inscrire** placé à côté de **Se connecter**. Un membre peut créer son compte avec son nom, son entreprise ou activité, son adresse e-mail et un mot de passe robuste. La route serveur `POST /api/register` crée exclusivement un rôle `member`, une entreprise isolée et un plan **Free de 7 jours**, puis ouvre une session sécurisée. Le rôle, le statut et le plan ne sont jamais choisis par le navigateur. Les inscriptions sont limitées à trois tentatives par adresse IP et par e-mail sur une période de quinze minutes.
 
 ## Correctif V5 — initialisation D1 automatique
 
@@ -82,7 +94,7 @@ npx wrangler pages secret delete SUPER_ADMIN_INITIAL_PASSWORD --project-name=glo
 ### Plan Free
 
 - accès complet à l’application ;
-- durée : **21 jours** ;
+- durée : **7 jours** ;
 - popup professionnel à l’ouverture de l’application, à l’ouverture des sections et toutes les 15 minutes ;
 - boutons **Compris** et **Acheter mon plan Business**.
 
@@ -95,7 +107,7 @@ npx wrangler pages secret delete SUPER_ADMIN_INITIAL_PASSWORD --project-name=glo
 Lien de paiement configuré côté interface :
 
 ```text
-https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=365000
+https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=100600
 ```
 
 L’achat n’active pas automatiquement le compte. Le Super Admin confirme ensuite le plan Business dans sa section d’administration.
@@ -105,7 +117,7 @@ L’achat n’active pas automatiquement le compte. Le Super Admin confirme ensu
 Le bouton **Super Admin** apparaît uniquement pour le rôle `super_admin`. Il permet de :
 
 - créer un compte membre et son entreprise isolée ;
-- choisir Free 21 jours ou Business 365 jours ;
+- choisir Free 7 jours, Standard 30 jours ou Business 365 jours ;
 - modifier le nom, l’e-mail et l’entreprise ;
 - activer ou désactiver un membre ;
 - assister un mot de passe perdu en imposant un nouveau mot de passe ;

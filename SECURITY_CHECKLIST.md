@@ -17,7 +17,7 @@
 | Gestion des membres | Création, modification, activation, désactivation, reset et suppression Super Admin |
 | Audit D1 | Table `audit_logs`, détails sensibles expurgés |
 | Migration des anciens hashes | Déplacement de `users.password_hash` vers `password_credentials` dans la migration 0002 |
-| Plans | Free 21 jours, Business 365 jours, dates calculées côté serveur |
+| Plans | Free 7 jours, Standard 30 jours, Business 365 jours, dates calculées côté serveur |
 | Popup Free | Ouverture de l’application, ouverture des sections et rappel toutes les 15 minutes |
 
 - [x] Schéma D1 final initialisé et vérifié automatiquement côté Worker avant toute authentification.

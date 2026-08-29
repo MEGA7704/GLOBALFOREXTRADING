@@ -24,7 +24,7 @@ const env = {
             return { results: ["id", "user_id", "email", "requester_name", "message", "status", "created_at", "resolved_at", "resolved_by"].map(name => ({ name })) };
           }
           if (sql.includes("sqlite_master") && sql.includes("name IN")) {
-            return { results: ["companies", "users", "password_credentials", "password_reset_requests", "analyses", "audit_logs", "company_data", "app_schema_meta"].map(name => ({ name })) };
+            return { results: ["companies", "company_subscriptions", "users", "password_credentials", "password_reset_requests", "analyses", "audit_logs", "company_data", "app_schema_meta"].map(name => ({ name })) };
           }
           return { results: [] };
         },
@@ -37,6 +37,18 @@ const env = {
   ASSETS: {
     async fetch(request) {
       const path = new URL(request.url).pathname;
+      if (path === "/internal-pages/home.page") {
+        return new Response(await readFile("public/internal-pages/home.page"), {
+          status: 200,
+          headers: { "Content-Type": "application/octet-stream" }
+        });
+      }
+      if (path === "/internal-pages/app.page") {
+        return new Response(await readFile("public/internal-pages/app.page"), {
+          status: 200,
+          headers: { "Content-Type": "application/octet-stream" }
+        });
+      }
       if (path === "/internal-pages/login.page") {
         return new Response(await readFile("public/internal-pages/login.page"), {
           status: 200,
@@ -65,7 +77,7 @@ if (!String(login.headers.get("content-type") || "").startsWith("text/html")) {
 }
 if (login.headers.has("location")) throw new Error("/login ne doit pas rediriger.");
 const loginBody = await login.text();
-if (!loginBody.includes("Connexion sécurisée")) throw new Error("Contenu de connexion absent.");
+if (!loginBody.includes("GLOBAL FOREX TRADING")) throw new Error("Contenu de connexion absent.");
 
 const legacy = await request("/login.html?next=%2F");
 if (legacy.status !== 308) throw new Error(`/login.html doit répondre 308, reçu ${legacy.status}`);
@@ -74,9 +86,10 @@ if (legacy.headers.get("location") !== "https://test.local/login?next=%2F") {
 }
 
 const root = await request("/");
-if (root.status !== 303 || root.headers.get("location") !== "https://test.local/login?next=%2F") {
-  throw new Error("La racine non authentifiée doit rediriger une seule fois vers /login?next=%2F.");
-}
+if (root.status !== 200) throw new Error(`La page d’accueil publique doit répondre 200, reçu ${root.status}`);
+if (!String(root.headers.get("content-type") || "").startsWith("text/html")) throw new Error("La racine doit servir la page d’accueil HTML.");
+const rootBody = await root.text();
+if (!rootBody.includes("FORMULES D’ACCÈS")) throw new Error("La page d’accueil publique est absente.");
 
 const internal = await request("/internal-pages/login.page");
 if (internal.status !== 404) throw new Error("Les pages internes ne doivent pas être accessibles directement.");
