@@ -292,13 +292,21 @@
           list.innerHTML = `<div class="cloud-empty">Aucune analyse enregistrée pour le moment.</div>`;
           return;
         }
-        list.innerHTML = state.history.map(item => `<article class="cloud-history-card" data-id="${escapeHtml(item.id)}"><div><strong>${escapeHtml(item.conclusion || item.decision || "Analyse")}</strong><small>${escapeHtml(formatDate(item.created_at))} · ${escapeHtml(item.source_type)}</small></div><div class="cloud-metric"><span>Décision</span><b>${escapeHtml(value(item.decision))}</b></div><div class="cloud-metric"><span>Score</span><b>${escapeHtml(value(item.score))}/100</b></div><div class="cloud-metric"><span>Risque</span><b>${escapeHtml(value(item.risk))}/100</b></div><div class="cloud-metric"><span>Timeframe</span><b>${escapeHtml(value(item.timeframe))}</b></div><div class="cloud-history-actions"><button data-view>Voir</button><button class="delete" data-delete>Supprimer</button></div></article>`).join("");
+        list.innerHTML = state.history.map(item => `<article class="cloud-history-card" data-id="${escapeHtml(item.id)}"><div><strong>${escapeHtml(item.conclusion || item.decision || "Analyse")}</strong><small>${escapeHtml(formatDate(item.created_at))} · ${escapeHtml(item.source_type)}</small></div><div class="cloud-metric"><span>Décision</span><b>${escapeHtml(value(item.decision))}</b></div><div class="cloud-metric"><span>Score</span><b>${escapeHtml(value(item.score))}/100</b></div><div class="cloud-metric"><span>Risque</span><b>${escapeHtml(value(item.risk))}/100</b></div><div class="cloud-metric"><span>Timeframe</span><b>${escapeHtml(value(item.timeframe))}</b></div><div class="cloud-history-actions"><button data-view>Voir</button><button data-print>🖨 Imprimer</button><button class="delete" data-delete>Supprimer</button></div></article>`).join("");
         list.querySelectorAll("[data-view]").forEach(button => button.addEventListener("click", () => {
           const item = state.history.find(entry => entry.id === button.closest("article").dataset.id);
           const pre = document.createElement("pre");
           pre.className = "cloud-json";
           pre.textContent = JSON.stringify(item?.raw_result || item, null, 2);
           dialog("Détail de l’analyse", pre);
+        }));
+        list.querySelectorAll("[data-print]").forEach(button => button.addEventListener("click", () => {
+          const item = state.history.find(entry => String(entry.id) === button.closest("article").dataset.id);
+          if (!item) return;
+          const result = item.raw_result || item;
+          if (typeof window.ForexPrintAnalysis === "function") {
+            window.ForexPrintAnalysis({ ...result, decision: result.decision || item.decision, score: result.score ?? item.score, risk: result.risk ?? item.risk, timeframe: result.timeframe || item.timeframe, conclusionText: result.conclusionText || item.conclusion }, { date: formatDate(item.created_at) });
+          } else toast("Impression indisponible.", "error");
         }));
         list.querySelectorAll("[data-delete]").forEach(button => button.addEventListener("click", async () => {
           const id = button.closest("article").dataset.id;

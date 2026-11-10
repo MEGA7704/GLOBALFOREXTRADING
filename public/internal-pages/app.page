@@ -393,6 +393,7 @@
     <button type="button" class="cloud-analysis-action" id="btnFit" data-role-scope="member">Ajuster</button>
     <button type="button" class="cloud-analysis-action reset" id="btnReset" data-role-scope="member">Reset</button>
     <button type="button" class="cloud-analysis-action" id="btnOpenResults" data-role-scope="member">Résultats</button>
+    <button type="button" class="cloud-analysis-action" id="btnPrintAnalysis" data-role-scope="member" title="Imprimer le graphique et le compte rendu narratif">🖨 Imprimer</button>
     <button type="button" class="cloud-analysis-action" data-cloud-action="history" data-role-scope="member">Historique</button>
 
     <div class="cloud-shell__tools" id="overlayToggles" data-role-scope="member" title="Afficher ou masquer les outils graphiques">
@@ -513,7 +514,7 @@
 <template id="tpl_results">
   <div class="row" style="justify-content:space-between">
     <div class="note"><b>Résultats</b></div>
-    <div class="note mono">v17</div>
+    <button type="button" class="btn small" id="btnPrintResults">🖨 Imprimer l’analyse</button>
   </div>
 
   <div class="grid" style="margin-top:10px">
@@ -541,6 +542,9 @@
 
   <div class="note" id="r_reason" style="margin-top:10px">Téléverse puis clique <b>Analyser</b>.</div>
 
+  <div class="kv" style="margin-top:10px">
+    <span>Analyse narrative</span><div id="r_narrative" style="white-space:pre-line;line-height:1.7">—</div>
+  </div>
   <div class="kv" style="margin-top:10px">
     <span>Conclusion (copiable)</span>
     <b id="r_conclusion">—</b>
@@ -580,7 +584,10 @@ function openModal(title, templateId){
   modalBack.classList.add("show");
   modalBack.setAttribute("aria-hidden","false");
   wireModal(templateId);
-  if(templateId==="tpl_results") renderResultsToModal();
+  if(templateId==="tpl_results") {
+    renderResultsToModal();
+    modalBody.querySelector("#btnPrintResults")?.addEventListener("click", printCurrentAnalysis);
+  }
   if(templateId==="tpl_live") refreshLiveBadge();
 }
 $("btnOpenLive")?.addEventListener("click", ()=> openModal("LIVE + Réglage bougies", "tpl_live"));
@@ -1340,6 +1347,7 @@ function renderResultsToModal(){
     r_pbConf: (r.confirmPB==null? "—" : (r.confirmPB ? "OUI":"NON")),
     r_dsZone: r.dsZone || "—",
     r_reason: r.reason || "—",
+    r_narrative: buildAnalysisNarrative(r),
     r_conclusion: r.conclusionText || "—",
   };
   for(const k in map){
@@ -1347,6 +1355,65 @@ function renderResultsToModal(){
     if(el) el.textContent = map[k];
   }
 }
+
+/* Impression structurée : graphique réel + indicateurs + analyse narrative. */
+function buildAnalysisNarrative(r){
+  if (!r) return "Aucune analyse disponible.";
+  const trend = ({UP:"haussière",DOWN:"baissière",RANGE:"latérale"})[r.trend] || "non déterminée";
+  const decision = r.decision || "ATTENTE";
+  const lines = [
+    `La tendance détectée est ${trend}. La décision issue de l’analyse est : ${decision}.`,
+    `Le score technique est de ${r.score ?? "—"}/100 et le niveau de risque estimé de ${r.risk ?? "—"}/100. La confiance est de ${r.conf == null ? "—" : Math.round(r.conf*100)+" %"} et le bruit de marché de ${r.noise == null ? "—" : Math.round(r.noise*100)+" %"}.`,
+    `Le niveau d’entrée conseillé est : ${r.entryMode || "—"}. Zone recommandée : ${r.zoneRec || "—"}. Ratio rendement/risque (proxy) : ${r.rr == null ? "—" : Number(r.rr).toFixed(2)}.`,
+    `Structure : ${r.structure || "—"}. Pullback : ${r.pullback == null ? "non renseigné" : (r.pullback ? "oui" : "non")}. Cassure : ${r.cassure == null ? "non renseignée" : (r.cassure ? "oui" : "non")}. Retest : ${r.retest == null ? "non renseigné" : (r.retest ? "oui" : "non")}. Zone d’offre/demande : ${r.dsZone || "—"}.`,
+    r.reason ? `Justification de l’analyse : ${r.reason}` : "",
+    `Conclusion : ${r.conclusionText || decision}.`,
+    "Ces résultats sont des indications techniques visuelles, non des garanties de performance ni des prix d’exécution exacts."
+  ];
+  return lines.filter(Boolean).join("\n\n");
+}
+function printAnalysisReport(result, options = {}){
+  if (!result) { alert("Aucune analyse disponible. Lancez d’abord une analyse."); return; }
+  const win = window.open("", "_blank", "width=1000,height=850");
+  if (!win) { alert("Autorisez les fenêtres pop-up pour pouvoir imprimer l’analyse."); return; }
+  const doc = win.document;
+  doc.open();
+  doc.write(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Rapport d’analyse — GLOBAL FOREX TRADING</title><style>
+    @page{size:A4;margin:15mm}*{box-sizing:border-box}body{font:13px/1.55 Arial,sans-serif;color:#17233c;margin:0;padding:25px}header{border-bottom:3px solid #1e65c7;padding-bottom:12px;margin-bottom:20px}h1{font-size:22px;margin:0;color:#0c2852}h2{font-size:16px;color:#0c2852;border-bottom:1px solid #cdd9e8;padding-bottom:5px;margin:22px 0 10px}.muted{color:#64748b}.chart{width:100%;height:auto;max-height:350px;object-fit:contain;border:1px solid #d7e1ed}.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 18px}.metric{border-bottom:1px solid #e5eaf1;padding:6px 0;overflow-wrap:anywhere}.metric b{display:block;color:#324664}.narrative{white-space:pre-line;overflow-wrap:anywhere;line-height:1.7}.disclaimer{border-top:1px solid #d7e1ed;margin-top:24px;padding-top:9px;font-size:11px;color:#64748b}button{margin-bottom:18px;padding:10px 15px;background:#1557d6;border:0;border-radius:6px;color:#fff;cursor:pointer}@media print{body{padding:0}button{display:none}.chart{max-height:310px}h2{break-after:avoid}.narrative{break-inside:auto}}
+  </style></head><body><button type="button" onclick="window.print()">🖨 Imprimer / Enregistrer en PDF</button><header><h1>GLOBAL FOREX TRADING</h1><div>Rapport d’analyse technique et narrative</div><div class="muted" id="reportDate"></div></header><main id="reportContent"></main><footer class="disclaimer">Analyse indicative basée sur des données visuelles. Ce document ne constitue pas un conseil en investissement.</footer></body></html>`);
+  doc.close();
+  doc.querySelector("#reportDate").textContent = options.date || new Date().toLocaleString("fr-FR");
+  const main = doc.querySelector("#reportContent");
+  const heading = (label) => {const h=doc.createElement("h2");h.textContent=label;main.append(h);};
+  if (options.chart) {
+    heading("1. Graphique analysé et annotations");
+    const img=doc.createElement("img");img.className="chart";img.alt="Graphique et annotations de l’analyse";img.src=options.chart;main.append(img);
+  }
+  heading(options.chart ? "2. Résultats de l’analyse" : "1. Résultats de l’analyse");
+  const metricList = [
+    ["Décision",result.decision],["Tendance",result.trend],["Score",result.score == null ? "—" : result.score+"/100"],["Risque",result.risk == null ? "—" : result.risk+"/100"],
+    ["Confiance",result.conf == null ? "—" : Math.round(result.conf*100)+" %"],["Bruit",result.noise == null ? "—" : Math.round(result.noise*100)+" %"],
+    ["Timeframe",result.tfDetect || result.timeframe],["R:R (proxy)",result.rr],["Entrée",result.entryMode],["Zone recommandée",result.zoneRec],["Pullback",result.pullback == null ? "—" : (result.pullback ? "Oui" : "Non")],
+    ["Zone pullback",result.pbZone],["Structure",result.structure],["Cassure",result.cassure == null ? "—" : (result.cassure ? "Oui" : "Non")],["Retest",result.retest == null ? "—" : (result.retest ? "Oui" : "Non")],
+    ["Zone offre/demande",result.dsZone]
+  ];
+  const grid=doc.createElement("div");grid.className="metrics";
+  for(const [label,val] of metricList){const el=doc.createElement("div");el.className="metric";const b=doc.createElement("b");b.textContent=label;el.append(b,doc.createTextNode(String(val ?? "—")));grid.append(el);}main.append(grid);
+  heading(options.chart ? "3. Résultats de l’analyse narrative" : "2. Résultats de l’analyse narrative");
+  const narrative=doc.createElement("div");narrative.className="narrative";narrative.textContent=buildAnalysisNarrative(result);main.append(narrative);
+  win.focus();
+  // La fenêtre reste consultable pour vérification, impression ou export PDF.
+}
+function printCurrentAnalysis(){
+  const r = LAST_RES;
+  if(!r || !LAST){alert("Effectuez une analyse valide avant l’impression.");return;}
+  let chart = null;
+  try { chart = $("cv").toDataURL("image/png"); }
+  catch(err){console.warn("Capture de l’impression indisponible",err);}
+  printAnalysisReport(r, {chart});
+}
+window.ForexPrintAnalysis = printAnalysisReport;
+$("btnPrintAnalysis")?.addEventListener("click",printCurrentAnalysis);
 
 /* ---------- Status line ---------- */
 function setStatus(text){
