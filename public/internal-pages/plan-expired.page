@@ -19,8 +19,12 @@
         <p>Les données de votre compte restent conservées dans Cloudflare D1. Un nouveau plan réactive l’accès complet à l’application.</p>
         <div class="plan-summary">
           <article><b>7 jours</b><span>Free · 0 FCFA</span></article>
-          <article><b>30 jours</b><span>Standard · 20 600 FCFA</span></article>
-          <article><b>365 jours</b><span>Business · 100 600 FCFA</span></article>
+          <article><b>60 minutes</b><span>200 FCFA</span></article>
+          <article><b>24 heures</b><span>700 FCFA</span></article>
+          <article><b>7 jours</b><span>1 700 FCFA</span></article>
+          <article><b>15 jours</b><span>2 900 FCFA</span></article>
+          <article><b>30 jours</b><span>Standard · 5 000 FCFA</span></article>
+          <article><b>365 jours</b><span>Business · 25 000 FCFA</span></article>
         </div>
       </div>
     </section>
@@ -30,8 +34,12 @@
         <p class="expired-note">Choisissez une formule payante puis contactez le Super Admin pour confirmer l’activation sur votre compte.</p>
         <div class="expired-actions">
           <div class="payment-grid">
-            <button class="primary-btn" id="buyStandard" type="button"><span>Standard — 20 600 FCFA</span><i>→</i></button>
-            <button class="primary-btn" id="buyBusiness" type="button"><span>Business — 100 600 FCFA</span><i>→</i></button>
+            <button class="primary-btn" type="button" data-plan-payment="minutes60"><span>60 minutes — 200 FCFA</span><i>→</i></button>
+            <button class="primary-btn" type="button" data-plan-payment="hours24"><span>24 heures — 700 FCFA</span><i>→</i></button>
+            <button class="primary-btn" type="button" data-plan-payment="days7"><span>7 jours — 1 700 FCFA</span><i>→</i></button>
+            <button class="primary-btn" type="button" data-plan-payment="days15"><span>15 jours — 2 900 FCFA</span><i>→</i></button>
+            <button class="primary-btn" type="button" data-plan-payment="standard"><span>Standard 30 jours — 5 000 FCFA</span><i>→</i></button>
+            <button class="primary-btn" type="button" data-plan-payment="business"><span>Business annuel — 25 000 FCFA</span><i>→</i></button>
           </div>
           <button class="secondary-btn" id="logoutButton" type="button">Se déconnecter</button>
         </div>
@@ -40,13 +48,15 @@
   </main>
   <script>
     (()=>{
-      const standardUrl="https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=20600";
-      const businessUrl="https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=100600";
+      const paymentBase="https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=";
+      const prices={minutes60:200,hours24:700,days7:1700,days15:2900,standard:5000,business:25000};
       let csrfToken="";
       async function csrf(){const r=await fetch('/api/csrf',{credentials:'same-origin'});const d=await r.json();csrfToken=d.csrfToken||'';}
       async function load(){try{await csrf();const r=await fetch('/api/me',{credentials:'same-origin'});const d=await r.json();if(r.ok&&d.plan){document.getElementById('planDetails').textContent=`Plan ${d.plan.label} · expiration : ${new Intl.DateTimeFormat('fr-FR',{dateStyle:'long'}).format(new Date(d.plan.expiresAt))}`;}}catch{}}
-      document.getElementById('buyStandard').addEventListener('click',()=>window.open(standardUrl,'_blank','noopener,noreferrer'));
-      document.getElementById('buyBusiness').addEventListener('click',()=>window.open(businessUrl,'_blank','noopener,noreferrer'));
+      document.querySelectorAll('[data-plan-payment]').forEach(button=>button.addEventListener('click',()=>{
+        const price=prices[button.dataset.planPayment];
+        if(price)window.open(paymentBase+price,'_blank','noopener,noreferrer');
+      }));
       document.getElementById('logoutButton').addEventListener('click',async()=>{try{if(!csrfToken)await csrf();await fetch('/api/logout',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrfToken},body:'{}',credentials:'same-origin'});}finally{location.replace('/');}});
       load();
     })();

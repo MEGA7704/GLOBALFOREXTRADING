@@ -9,14 +9,14 @@
 
 ## Formules
 - Free : 7 jours — 0 FCFA.
-- Standard : 30 jours — 20 600 FCFA.
-- Business : 365 jours — 100 600 FCFA.
+- Standard : 30 jours — 5 000 FCFA.
+- Business : 365 jours — 25 000 FCFA.
 
 La table `company_subscriptions` est ajoutée afin de supporter le plan Standard sans casser les anciennes bases D1 dont la table `companies` limitait historiquement `plan_code` à Free/Business.
 
 ## Paiement
-- Standard : lien Wave avec montant 20 600 FCFA.
-- Business : lien Wave avec montant 100 600 FCFA.
+- Standard : lien Wave avec montant 5 000 FCFA.
+- Business : lien Wave avec montant 25 000 FCFA.
 - L’activation effective du plan reste une action serveur/Super Admin.
 
 ## Sécurité conservée

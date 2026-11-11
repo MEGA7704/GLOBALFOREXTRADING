@@ -7,8 +7,8 @@ La racine `/` affiche désormais une page d’accueil professionnelle et respons
 ### Formules
 
 - **Free** : 7 jours — **0 FCFA** ;
-- **Standard** : 30 jours — **20 600 FCFA** ;
-- **Business** : 365 jours — **100 600 FCFA**.
+- **Standard** : 30 jours — **5 000 FCFA** ;
+- **Business** : 365 jours — **25 000 FCFA**.
 
 Les nouveaux comptes sont créés en Free. Les changements de formule restent contrôlés côté serveur et par le Super Admin.
 
@@ -107,7 +107,7 @@ npx wrangler pages secret delete SUPER_ADMIN_INITIAL_PASSWORD --project-name=glo
 Lien de paiement configuré côté interface :
 
 ```text
-https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=100600
+https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=25000
 ```
 
 L’achat n’active pas automatiquement le compte. Le Super Admin confirme ensuite le plan Business dans sa section d’administration.

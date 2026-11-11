@@ -1,6 +1,15 @@
 (() => {
-  const STANDARD_PAYMENT_URL = "https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=20600";
-  const BUSINESS_PAYMENT_URL = "https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=100600";
+  const PAYMENT_BASE = "https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=";
+  const PLAN_OPTIONS = [
+    {code:"free", label:"Free — 7 jours — 0 FCFA"},
+    {code:"minutes60", label:"60 minutes — 200 FCFA"},
+    {code:"hours24", label:"24 heures — 700 FCFA"},
+    {code:"days7", label:"7 jours — 1 700 FCFA"},
+    {code:"days15", label:"15 jours — 2 900 FCFA"},
+    {code:"standard", label:"Standard — 30 jours — 5 000 FCFA"},
+    {code:"business", label:"Business — 365 jours — 25 000 FCFA"}
+  ];
+  const PLAN_PRICES = {minutes60:200,hours24:700,days7:1700,days15:2900,standard:5000,business:25000};
   const FREE_POPUP_INTERVAL = 15 * 60 * 1000;
   const state = {
     user: null,
@@ -252,11 +261,10 @@
             <div class="cloud-upgrade__icon">7</div>
             <div class="cloud-upgrade__eyebrow">PLAN FREE ACTIF</div>
             <h2 id="upgradeTitle">Prolongez votre accès à GLOBAL FOREX TRADING</h2>
-            <p>Votre plan Free donne un accès complet pendant <b>7 jours</b>. Choisissez ensuite Standard pour <b>30 jours</b> ou Business pour <b>365 jours</b>.</p>
+            <p>Votre plan Free donne un accès complet pendant <b>7 jours</b>. Choisissez ensuite une formule de 60 minutes à 365 jours.</p>
             <div class="cloud-upgrade__grid cloud-upgrade__grid--three">
               <article><span>Plan actuel</span><b>Free</b><small>${escapeHtml(String(state.plan.daysRemaining ?? 0))} jour(s) restant(s) · 0 FCFA</small></article>
-              <article><span>Standard</span><b>20 600 FCFA</b><small>30 jours d’accès complet</small><button type="button" class="primary" data-buy-standard>Choisir Standard</button></article>
-              <article><span>Business</span><b>100 600 FCFA</b><small>365 jours d’accès complet</small><button type="button" class="primary" data-buy-business>Choisir Business</button></article>
+              ${PLAN_OPTIONS.filter(plan => plan.code !== "free").map(plan => `<article><span>${escapeHtml(plan.label.split(" — ")[0])}</span><b>${PLAN_PRICES[plan.code].toLocaleString("fr-FR")} FCFA</b><small>${escapeHtml(plan.label.split(" — ")[0])} d’accès complet</small><button type="button" class="primary" data-buy-plan="${plan.code}">Choisir</button></article>`).join("")}
             </div>
             <div class="cloud-upgrade__actions">
               <button type="button" class="secondary" data-understood>Compris</button>
@@ -266,8 +274,10 @@
       </section>`;
     const closeUpgrade = () => backdrop.remove();
     backdrop.querySelector("[data-understood]").addEventListener("click", closeUpgrade);
-    backdrop.querySelector("[data-buy-standard]").addEventListener("click", () => window.open(STANDARD_PAYMENT_URL, "_blank", "noopener,noreferrer"));
-    backdrop.querySelector("[data-buy-business]").addEventListener("click", () => window.open(BUSINESS_PAYMENT_URL, "_blank", "noopener,noreferrer"));
+    backdrop.querySelectorAll("[data-buy-plan]").forEach(button => button.addEventListener("click", () => {
+      const amount = PLAN_PRICES[button.dataset.buyPlan];
+      if (amount) window.open(PAYMENT_BASE + amount, "_blank", "noopener,noreferrer");
+    }));
     document.body.appendChild(backdrop);
   }
 
@@ -328,7 +338,7 @@
   }
 
   function accountCard(account) {
-    const planClass = ["free", "standard", "business"].includes(account.plan?.code) ? account.plan.code : "free";
+    const planClass = PLAN_OPTIONS.some(plan => plan.code === account.plan?.code) ? account.plan.code : "free";
     return `<article class="admin-account-card" data-id="${escapeHtml(account.id)}">
       <div class="admin-account-main"><span class="admin-state ${account.active ? "active" : "disabled"}">${account.active ? "ACTIF" : "DÉSACTIVÉ"}</span><h4>${escapeHtml(account.name)}</h4><p>${escapeHtml(account.email)}</p><small>${escapeHtml(account.company?.name || "Entreprise")}</small></div>
       <div class="admin-account-plan ${planClass}"><span>PLAN</span><b>${escapeHtml(account.plan?.label || "Free")}</b><small>Expire le ${escapeHtml(formatDateOnly(account.plan?.expiresAt))}</small><em>${escapeHtml(String(account.plan?.daysRemaining ?? 0))} jour(s)</em></div>
@@ -428,17 +438,17 @@
         });
         card.querySelector("[data-plan]").addEventListener("click", async () => {
           const current = account.plan?.code || "free";
-          const requested = prompt("Saisissez FREE, STANDARD ou BUSINESS :", current.toUpperCase());
+          const requested = prompt(`Choisissez un plan : ${PLAN_OPTIONS.map(p => p.code).join(", ")}`, current);
           if (requested === null) return;
           const planCode = requested.trim().toLowerCase();
-          if (!["free", "standard", "business"].includes(planCode)) return toast("Plan invalide.", "error");
+          if (!PLAN_OPTIONS.some(plan => plan.code === planCode)) return toast("Plan invalide.", "error");
           if (!confirm(`Appliquer le plan ${planCode.toUpperCase()} à partir d’aujourd’hui ?`)) return;
           try {
             await api(`/api/admin/accounts/${encodeURIComponent(account.id)}/plan`, {
               method: "POST",
               body: JSON.stringify({ planCode })
             });
-            toast(`Plan ${planCode === "business" ? "Business 365 jours" : planCode === "standard" ? "Standard 30 jours" : "Free 7 jours"} appliqué.`);
+            toast(`Plan ${PLAN_OPTIONS.find(plan => plan.code === planCode)?.label || planCode} appliqué.`);
             refresh();
           } catch (error) { toast(error.message, "error"); }
         });
@@ -485,7 +495,7 @@
         <label>Nom du membre<input name="name" required minlength="2" maxlength="100" placeholder="Nom et prénoms"/></label>
         <label>Adresse e-mail<input name="email" type="email" required maxlength="180" placeholder="membre@entreprise.com"/></label>
         <label>Nom de l’entreprise<input name="companyName" required minlength="2" maxlength="140" placeholder="Entreprise du membre"/></label>
-        <label>Plan<select name="planCode"><option value="free">Free — 7 jours — 0 FCFA</option><option value="standard">Standard — 30 jours — 20 600 FCFA</option><option value="business">Business — 365 jours — 100 600 FCFA</option></select></label>
+        <label>Plan<select name="planCode">${PLAN_OPTIONS.map(plan => `<option value="${plan.code}">${escapeHtml(plan.label)}</option>`).join("")}</select></label>
         <label class="wide">Mot de passe initial<input name="password" required minlength="12" maxlength="128" value="${escapeHtml(generatedPassword)}"/></label>
       </div>
       <div class="admin-form-note">Le mot de passe est haché uniquement dans <code>public/_worker.js</code>. Aucun hash ni sel n’est renvoyé au navigateur.</div>

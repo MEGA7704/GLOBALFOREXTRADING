@@ -9,16 +9,20 @@ const REGISTER_MAX_ATTEMPTS = 3;
 const PASSWORD_RESET_MAX_ATTEMPTS = 3;
 const PBKDF2_ITERATIONS = 100000;
 const PBKDF2_MAX_SUPPORTED_ITERATIONS = 100000;
+const PLAN_CATALOG = Object.freeze({
+  free: { label: "Free", durationMs: 7 * 86400000, priceFcfa: 0 },
+  minutes60: { label: "60 minutes", durationMs: 60 * 60000, priceFcfa: 200 },
+  hours24: { label: "24 heures", durationMs: 24 * 3600000, priceFcfa: 700 },
+  days7: { label: "7 jours", durationMs: 7 * 86400000, priceFcfa: 1700 },
+  days15: { label: "15 jours", durationMs: 15 * 86400000, priceFcfa: 2900 },
+  standard: { label: "Standard", durationMs: 30 * 86400000, priceFcfa: 5000 },
+  business: { label: "Business", durationMs: 365 * 86400000, priceFcfa: 25000 }
+});
 const FREE_PLAN_DAYS = 7;
-const STANDARD_PLAN_DAYS = 30;
-const BUSINESS_PLAN_DAYS = 365;
-const STANDARD_PRICE_FCFA = 20600;
-const BUSINESS_PRICE_FCFA = 100600;
-const STANDARD_PAYMENT_URL = "https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=20600";
-const BUSINESS_PAYMENT_URL = "https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=100600";
+const PAYMENT_URL_BASE = "https://pay.wave.com/m/M_ci_Enx-2JNAklk-/c/ci/?amount=";
 const APP_STATE_MAX_BYTES = 350000;
 
-const APP_SCHEMA_VERSION = 5;
+const APP_SCHEMA_VERSION = 6;
 
 const FINAL_TABLE_STATEMENTS = [
   `CREATE TABLE IF NOT EXISTS app_schema_meta (
@@ -38,7 +42,7 @@ const FINAL_TABLE_STATEMENTS = [
   )`,
   `CREATE TABLE IF NOT EXISTS company_subscriptions (
     company_id TEXT PRIMARY KEY,
-    plan_code TEXT NOT NULL DEFAULT 'free' CHECK (plan_code IN ('free','standard','business')),
+    plan_code TEXT NOT NULL DEFAULT 'free' CHECK (plan_code IN ('free','minutes60','hours24','days7','days15','standard','business')),
     plan_started_at TEXT NOT NULL,
     plan_expires_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
@@ -343,27 +347,20 @@ function addDays(date, days) {
 }
 
 function planDurationDays(planCode) {
-  if (planCode === "business") return BUSINESS_PLAN_DAYS;
-  if (planCode === "standard") return STANDARD_PLAN_DAYS;
-  return FREE_PLAN_DAYS;
+  return (PLAN_CATALOG[planCode] ?? PLAN_CATALOG.free).durationMs / 86400000;
 }
-
 function planLabel(planCode) {
-  if (planCode === "business") return "Business";
-  if (planCode === "standard") return "Standard";
-  return "Free";
+  return PLAN_CATALOG[planCode]?.label ?? "Free";
 }
-
 function planPriceFcfa(planCode) {
-  if (planCode === "business") return BUSINESS_PRICE_FCFA;
-  if (planCode === "standard") return STANDARD_PRICE_FCFA;
-  return 0;
+  return PLAN_CATALOG[planCode]?.priceFcfa ?? 0;
 }
-
 function planPaymentUrl(planCode) {
-  if (planCode === "business") return BUSINESS_PAYMENT_URL;
-  if (planCode === "standard") return STANDARD_PAYMENT_URL;
-  return null;
+  const price = planPriceFcfa(planCode);
+  return price > 0 ? PAYMENT_URL_BASE + price : null;
+}
+function addPlanDuration(date, planCode) {
+  return new Date(new Date(date).getTime() + (PLAN_CATALOG[planCode]?.durationMs ?? PLAN_CATALOG.free.durationMs)).toISOString();
 }
 
 function computePlan(company) {
@@ -596,6 +593,27 @@ async function verifyFinalSchema(db) {
   }
 }
 
+async function upgradeSubscriptionPlans(db) {
+  const row = await db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'company_subscriptions'").first();
+  if (!row || String(row.sql || "").includes("minutes60")) return;
+  // Preserve existing subscriptions and their expiration timestamps unchanged.
+  await db.batch([
+    db.prepare(`CREATE TABLE company_subscriptions_v6 (
+      company_id TEXT PRIMARY KEY,
+      plan_code TEXT NOT NULL DEFAULT 'free' CHECK (plan_code IN ('free','minutes60','hours24','days7','days15','standard','business')),
+      plan_started_at TEXT NOT NULL, plan_expires_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+    )`),
+    db.prepare(`INSERT INTO company_subscriptions_v6
+      (company_id,plan_code,plan_started_at,plan_expires_at,updated_at)
+      SELECT company_id,plan_code,plan_started_at,plan_expires_at,updated_at FROM company_subscriptions`),
+    db.prepare("DROP TABLE company_subscriptions"),
+    db.prepare("ALTER TABLE company_subscriptions_v6 RENAME TO company_subscriptions"),
+    db.prepare("CREATE INDEX IF NOT EXISTS idx_company_subscriptions_plan ON company_subscriptions(plan_code, plan_expires_at)")
+  ]);
+}
+
 async function initializeDatabase(db) {
   const hasUsers = await tableExists(db, "users");
   if (!hasUsers) {
@@ -606,6 +624,7 @@ async function initializeDatabase(db) {
     if (isLegacy) await migrateLegacySchema(db);
     else await createFinalSchema(db);
   }
+  await upgradeSubscriptionPlans(db);
   await verifyFinalSchema(db);
 }
 
@@ -1037,7 +1056,7 @@ async function handleRegister(env, request) {
   const nowIso = now.toISOString();
   const companyId = crypto.randomUUID();
   const userId = crypto.randomUUID();
-  const expiresAt = addDays(now, FREE_PLAN_DAYS);
+  const expiresAt = addPlanDuration(now, "free");
   const passwordHash = await hashPassword(password, env.AUTH_PEPPER);
 
   try {
@@ -1509,7 +1528,7 @@ async function createAdminAccount(env, request, auth) {
   const companyName = safeText(body.companyName, 140);
   const email = validateEmail(body.email);
   const password = validatePassword(body.password);
-  const planCode = ["free", "standard", "business"].includes(body.planCode) ? body.planCode : "free";
+  const planCode = Object.hasOwn(PLAN_CATALOG, body.planCode) ? body.planCode : "free";
   const legacyPlanCode = planCode === "business" ? "business" : "free";
   if (name.length < 2 || companyName.length < 2) throw new Error("Nom du membre ou de l’entreprise invalide.");
   const existing = await env.FOREX_D1.prepare("SELECT id FROM users WHERE email = ? LIMIT 1").bind(email).first();
@@ -1522,7 +1541,7 @@ async function createAdminAccount(env, request, auth) {
   const nowIso = now.toISOString();
   const companyId = crypto.randomUUID();
   const userId = crypto.randomUUID();
-  const expiresAt = addDays(now, planDurationDays(planCode));
+  const expiresAt = addPlanDuration(now, planCode);
   const passwordHash = await hashPassword(password, env.AUTH_PEPPER || "");
   await env.FOREX_D1.batch([
     env.FOREX_D1.prepare(`
@@ -1627,7 +1646,7 @@ async function setAdminAccountPlan(env, request, auth, userId) {
   requireRole(auth, "super_admin");
   assertCsrf(request);
   const body = await readJson(request, 5000);
-  const planCode = ["free", "standard", "business"].includes(body.planCode) ? body.planCode : null;
+  const planCode = Object.hasOwn(PLAN_CATALOG, body.planCode) ? body.planCode : null;
   if (!planCode) throw new Error("Plan invalide.");
   const target = await env.FOREX_D1.prepare(`
     SELECT id, company_id, role FROM users WHERE id = ? AND deleted_at IS NULL LIMIT 1
@@ -1639,7 +1658,7 @@ async function setAdminAccountPlan(env, request, auth, userId) {
   }
   const now = new Date();
   const startedAt = now.toISOString();
-  const expiresAt = addDays(now, planDurationDays(planCode));
+  const expiresAt = addPlanDuration(now, planCode);
   const legacyPlanCode = planCode === "business" ? "business" : "free";
   await env.FOREX_D1.batch([
     env.FOREX_D1.prepare(`

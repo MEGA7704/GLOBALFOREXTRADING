@@ -29,8 +29,8 @@ for (const expected of [
   'FREE_PLAN_DAYS = "7"',
   'STANDARD_PLAN_DAYS = "30"',
   'BUSINESS_PLAN_DAYS = "365"',
-  'STANDARD_PRICE_FCFA = "20600"',
-  'BUSINESS_PRICE_FCFA = "100600"'
+  'STANDARD_PRICE_FCFA = "5000"',
+  'BUSINESS_PRICE_FCFA = "25000"'
 ]) {
   if (!wrangler.includes(expected)) throw new Error(`Configuration manquante : ${expected}`);
 }
@@ -49,8 +49,8 @@ for (const expected of [
   "password_credentials",
   "password_reset_requests",
   "company_subscriptions",
-  "STANDARD_PLAN_DAYS",
-  "STANDARD_PRICE_FCFA",
+  "PLAN_CATALOG",
+  "planPriceFcfa",
   "ensureDatabaseSchema",
   'serveInternalHtml(env, request, "/internal-pages/home.page")',
   'serveInternalHtml(env, request, "/internal-pages/app.page")',
@@ -82,8 +82,8 @@ for (const expected of [
   "7 jours",
   "30 jours",
   "365 jours",
-  "20 600 FCFA",
-  "100 600 FCFA",
+  "5 000 FCFA",
+  "25 000 FCFA",
   'id="loginDialog"',
   'id="registerDialog"',
   'data-auth="login"',
@@ -113,8 +113,8 @@ for (const expected of [
   "activateRoleInterface",
   'showAdmin({ inline: true })',
   '"standard"',
-  "20 600 FCFA",
-  "100 600 FCFA"
+  "5 000 FCFA",
+  "25 000 FCFA"
 ]) {
   if (!shellScript.includes(expected)) throw new Error(`Gestion des plans ou des rôles incomplète : ${expected}`);
 }
@@ -139,4 +139,4 @@ for (const file of browserFiles) {
   if (/localStorage\s*\./.test(content)) throw new Error(`Utilisation de localStorage détectée : ${file}`);
 }
 
-console.log("Vérification réussie : accueil public, authentification en popup, trois plans et sécurité conformes.");
+console.log("Vérification réussie : accueil public, authentification en popup, sept plans et sécurité conformes.");
