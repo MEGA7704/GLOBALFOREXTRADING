@@ -3,44 +3,60 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <meta name="description" content="GLOBAL FOREX TRADING — plateforme sécurisée d’analyse de captures Forex."/>
+  <meta name="description" content="GLOBAL FOREX TRADING — Forex Capture Analyzer PRO : analyses techniques, résultats narratifs et rapports imprimables."/>
   <title>GLOBAL FOREX TRADING — Forex Capture Analyzer Edition</title>
-  <link rel="stylesheet" href="/assets/home.css?v=2.12.0"/>
+  <link rel="stylesheet" href="/assets/home.css?v=2.13.0"/>
 </head>
 <body>
   <header class="site-header">
     <a class="brand" href="/" aria-label="GLOBAL FOREX TRADING — Accueil">
-      <span class="brand-mark" aria-hidden="true">
-        <i class="bar b1"></i><i class="bar b2"></i><i class="bar b3"></i><i class="trend"></i>
-      </span>
-      <span class="brand-copy">
-        <strong>GLOBAL FOREX TRADING</strong>
-        <small>Forex Capture Analyzer Edition</small>
-      </span>
+      <span class="brand-mark" aria-hidden="true"><i class="bar b1"></i><i class="bar b2"></i><i class="bar b3"></i><i class="trend"></i></span>
+      <span class="brand-copy"><strong>Forex Capture Analyzer <em>PRO</em></strong><small>GLOBAL FOREX TRADING · MEGA SERVICES EDITION</small></span>
     </a>
+    <nav class="site-nav" aria-label="Navigation principale">
+      <a href="#accueil">Accueil</a><a href="#fonctionnalites">Fonctionnalités</a><a href="#plans">Tarifs</a><a href="#apercu">Analyses</a><a href="#contact">Contact</a>
+    </nav>
     <nav class="top-actions" aria-label="Accès au compte">
       <a class="btn btn-ghost" id="loginLink" data-auth="login" href="/?auth=login&amp;next=%2Fapp">Connexion</a>
-      <a class="btn btn-primary" id="registerLink" data-auth="register" href="/?auth=register&amp;next=%2Fapp"><span class="user-icon">♙</span>S’inscrire</a>
+      <a class="btn btn-primary" id="registerLink" data-auth="register" href="/?auth=register&amp;next=%2Fapp">S’inscrire</a>
     </nav>
   </header>
 
   <main>
-    <section class="hero page-shell">
+    <section class="hero page-shell" id="accueil">
       <div class="hero-copy">
-        <div class="eyebrow">★ &nbsp; PLATEFORME D’ANALYSE FOREX INTELLIGENTE</div>
-        <h1>Analysez vos captures <span>Forex avec précision</span></h1>
-        <p>Détectez les tendances, identifiez les zones clés et facilitez vos prises de décision grâce à des indicateurs visuels professionnels.</p>
+        <div class="eyebrow">✦ &nbsp; FOREX CAPTURE ANALYZER PRO</div>
+        <h1><span>Analyse technique avancée</span> pour les traders</h1>
+        <p>Importez vos graphiques Forex, identifiez les tendances et les zones clés, puis obtenez des résultats techniques accompagnés d’une <strong>analyse narrative claire</strong> pour éclairer vos décisions.</p>
         <div class="hero-actions">
           <a class="btn btn-primary btn-large" id="startAnalysis" data-auth="login" href="/?auth=login&amp;next=%2Fapp">↗ &nbsp; Commencer l’analyse</a>
-          <a class="btn btn-ghost btn-large" data-auth="login" href="/?auth=login&amp;next=%2Fapp">♙ &nbsp; Se connecter</a>
+          <a class="btn btn-ghost btn-large" href="#plans">Voir les tarifs ↓</a>
         </div>
-        <div class="trust-row" aria-label="Avantages">
-          <span>ϟ <b>Rapide &amp; précis</b></span>
-          <span>♢ <b>Sécurisé</b></span>
-          <span>▣ <b>Données confidentielles</b></span>
+        <div class="trust-row"><span>✓ <b>Analyse visuelle</b></span><span>✓ <b>Résultats narratifs</b></span><span>✓ <b>Rapports imprimables</b></span></div>
+        <p class="risk-notice">Les analyses sont des aides à la décision, sans garantie de gains ni conseil personnalisé en investissement.</p>
+      </div>
+      <div class="hero-artwork">
+        <img src="/assets/forex-hero.webp" alt="Présentation de Forex Capture Analyzer PRO avec graphique Forex et identité visuelle MEGA SERVICES" width="552" height="393" fetchpriority="high" />
+        <div class="hero-visual-caption"><span class="live-dot"></span> Plateforme d’analyse Forex · MEGA SERVICES</div>
+      </div>
+    </section>
+
+    <section class="features-section" id="fonctionnalites">
+      <div class="page-shell">
+        <div class="section-heading"><span>FONCTIONNALITÉS PRINCIPALES</span><h2>Des outils pour analyser, comprendre et documenter</h2><p>Une expérience conçue pour simplifier votre analyse des graphiques Forex.</p></div>
+        <div class="features">
+          <article><span class="feature-icon gold">▧</span><div><h2>Capture de graphique</h2><p>Importez une capture de votre graphique Forex pour lancer son analyse.</p></div></article>
+          <article><span class="feature-icon gold">⚙</span><div><h2>Analyse technique</h2><p>Repérez les tendances, zones de support et de résistance et signaux visuels.</p></div></article>
+          <article><span class="feature-icon gold">☷</span><div><h2>Résultats narratifs</h2><p>Retrouvez une interprétation rédigée des éléments détectés sur vos captures.</p></div></article>
+          <article><span class="feature-icon gold">▤</span><div><h2>Impression des analyses</h2><p>Imprimez les résultats techniques avec l’analyse narrative juste en dessous.</p></div></article>
+          <article><span class="feature-icon gold">◴</span><div><h2>Historique</h2><p>Consultez vos analyses sauvegardées dans votre espace personnel.</p></div></article>
+          <article><span class="feature-icon gold">▥</span><div><h2>Tableau de bord</h2><p>Accédez aux analyses et outils du logiciel dans un environnement centralisé.</p></div></article>
         </div>
       </div>
+    </section>
 
+    <section class="preview-section page-shell" id="apercu">
+      <div class="section-heading"><span>APERÇU DU LOGICIEL</span><h2>Visualisez vos analyses sur un même écran</h2><p>Exemple de tableau de bord présenté à titre d’illustration ; les résultats réels dépendent de chaque graphique.</p></div>
       <div class="dashboard-card" aria-label="Aperçu de l’interface d’analyse">
         <div class="dashboard-head">
           <div><b>Tableau de bord</b><span class="status-dot">● Analyse terminée</span></div>
@@ -96,11 +112,7 @@
       </div>
     </section>
 
-    <section class="features page-shell" aria-label="Fonctionnalités principales">
-      <article><span class="feature-icon green">▥</span><div><h2>Détection des tendances</h2><p>Algorithmes d’analyse visuelle pour repérer les tendances haussières, baissières ou neutres avec un score de confiance.</p></div></article>
-      <article><span class="feature-icon blue">⌖</span><div><h2>Zones clés</h2><p>Identification automatique des zones de support et de résistance pour mieux anticiper les réactions du marché.</p></div></article>
-      <article><span class="feature-icon purple">◉</span><div><h2>Analyse visuelle professionnelle</h2><p>Indicateurs techniques et visualisations claires pour des analyses structurées et objectives.</p></div></article>
-    </section>
+
 
     <section class="pricing page-shell" id="plans">
       <div class="section-heading"><span>FORMULES D’ACCÈS</span><h2>Choisissez la durée adaptée à votre utilisation</h2><p>Tous les plans donnent accès aux fonctionnalités de l’application pendant leur durée de validité.</p></div>
@@ -115,6 +127,13 @@
       </div>
     </section>
 
+    <section class="printing-section page-shell" id="impression">
+      <div class="report-example" aria-label="Illustration d’un rapport imprimable">
+        <div class="paper"><div class="paper-head">GLOBAL FOREX TRADING <span>RAPPORT D’ANALYSE</span></div><div class="paper-chart"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><h3>Résultats techniques</h3><dl><dt>Tendance</dt><dd>Haussière (exemple)</dd><dt>Support</dt><dd>Zone identifiée</dd><dt>Signal</dt><dd>À interpréter</dd></dl><h3>Analyse narrative</h3><p>Le rapport présente une explication structurée de la tendance et des principaux niveaux observés.</p></div>
+      </div>
+      <div class="printing-copy"><span class="kicker">RAPPORTS PROFESSIONNELS</span><h2>Imprimez vos analyses avec leurs <em>résultats narratifs</em></h2><p>Générez un document clair, facile à consulter, à archiver ou à partager au format papier ou PDF via votre navigateur.</p><div class="print-bullet"><span>✓</span> Résultats de l’analyse technique : tendance, zones et indicateurs disponibles</div><div class="print-bullet"><span>✓</span> Analyse narrative présentée sous les résultats techniques</div><div class="print-bullet"><span>✓</span> Mise en page adaptée à l’impression</div><a href="/?auth=login&amp;next=%2Fapp" data-auth="login" class="btn btn-primary">Accéder à mes analyses →</a></div>
+    </section>
+
     <section class="security-strip page-shell" aria-label="Sécurité et accessibilité">
       <article><span>♢</span><div><b>Espace sécurisé</b><small>Vos données sont isolées par compte et entreprise.</small></div></article>
       <article><span>▣</span><div><b>Cookie HttpOnly sécurisé</b><small>Protection renforcée des sessions et des accès.</small></div></article>
@@ -123,7 +142,7 @@
     </section>
   </main>
 
-  <footer class="site-footer">
+  <footer class="site-footer" id="contact">
     <div class="footer-main page-shell">
       <section class="footer-intro" aria-labelledby="footerBrandTitle">
         <div class="footer-brand-line">
@@ -331,6 +350,6 @@
     </div>
   </template>
 
-  <script src="/assets/home.js?v=2.12.0" defer></script>
+  <script src="/assets/home.js?v=2.13.0" defer></script>
 </body>
 </html>
